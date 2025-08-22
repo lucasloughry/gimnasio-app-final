@@ -2,16 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-// ESTA ES LA LÍNEA QUE NECESITAS RESTAURAR
-
-
 export default function Home() {
   const [machines, setMachines] = useState([]);
 
   useEffect(() => {
     const fetchMachines = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/machines`);
+        // Usando la ruta relativa directamente
+        const response = await axios.get('/api/machines');
         setMachines(response.data);
       } catch (error) {
         console.error("Error al obtener las máquinas:", error);
@@ -27,8 +25,9 @@ export default function Home() {
         {machines.map(m => (
           <div key={m._id} className="bg-white shadow p-4 rounded-lg flex flex-col">
             {m.image && (
+              // Usando la ruta relativa para la imagen
               <img 
-                src={`${API_URL}/${m.image.replace(/\\/g, '/')}`} 
+                src={`/${m.image.replace(/\\/g, '/')}`} 
                 alt={m.name} 
                 className="w-full h-48 object-cover rounded-md mb-4"
               />
