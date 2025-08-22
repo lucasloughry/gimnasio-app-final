@@ -25,7 +25,7 @@ export default function EditMachine() {
   const handleAddExercise = async (e) => {
     e.preventDefault();
     if (!exerciseName || !gifFile) {
-      alert('Please complete the name and select a GIF.');
+      alert('Por favor, completa el nombre y selecciona un GIF.');
       return;
     }
 
@@ -34,7 +34,6 @@ export default function EditMachine() {
     formData.append('gif', gifFile);
 
     try {
-      // Using relative path
       const response = await axios.post(`/api/machines/${id}/exercises`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -42,11 +41,12 @@ export default function EditMachine() {
       setExerciseName('');
       setGifFile(null);
       e.target.reset();
-      alert('Exercise added successfully');
-    } catch (error)      console.error('Error adding exercise:', error);
-      alert('Error adding exercise.');
+      alert('Ejercicio añadido exitosamente');
+    } catch (error) { // <-- AQUÍ ESTÁ LA CORRECCIÓN
+      console.error('Error al añadir el ejercicio:', error);
+      alert('Error al añadir el ejercicio.');
     }
-  };
+};
 
   const handleDeleteExercise = async (exerciseId) => {
     if (window.confirm('Are you sure you want to delete this exercise?')) {
