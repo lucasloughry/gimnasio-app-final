@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 
-
-
 export default function Maquina() {
   const { id } = useParams();
   const [machine, setMachine] = useState(null);
@@ -11,7 +9,8 @@ export default function Maquina() {
   useEffect(() => {
     const fetchMachine = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/machines/${id}`);
+        // Usando ruta relativa
+        const response = await axios.get(`/api/machines/${id}`);
         setMachine(response.data);
       } catch (error) {
         console.error("Error al obtener la máquina:", error);
@@ -28,7 +27,8 @@ export default function Maquina() {
     <div className="p-4 max-w-4xl mx-auto">
       {machine.image && (
         <img 
-          src={`${API_URL}/${machine.image.replace(/\\/g, '/')}`} 
+          // Usando ruta relativa para la imagen
+          src={`/${machine.image.replace(/\\/g, '/')}`} 
           alt={machine.name} 
           className="w-full h-80 object-cover rounded-lg mb-6 shadow-lg"
         />
@@ -38,13 +38,13 @@ export default function Maquina() {
       
       <h2 className="text-2xl font-semibold mb-3">Ejercicios recomendados:</h2>
       
-      {/* --- SECCIÓN MODIFICADA --- */}
       <ul className="space-y-4">
         {machine.exercises && machine.exercises.length > 0 ? (
           machine.exercises.map((ej, idx) => (
             <li key={idx} className="flex items-center bg-gray-50 p-3 rounded-lg shadow-sm">
               <img 
-                src={`${API_URL}/${ej.gifUrl.replace(/\\/g, '/')}`} 
+                // Usando ruta relativa para el GIF
+                src={`/${ej.gifUrl.replace(/\\/g, '/')}`} 
                 alt={ej.name}
                 className="w-20 h-20 object-cover rounded-md mr-4 bg-gray-200"
               />
