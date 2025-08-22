@@ -3,9 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 
-// Esta línea es la que falta
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,7 +12,8 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API_URL}/api/users/login`, {
+      // Usando la ruta relativa, que funciona en local y en producción
+      const response = await axios.post('/api/users/login', {
         email,
         password,
       });
