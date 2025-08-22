@@ -2,9 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-// La variable API_URL debe apuntar al puerto 5001
-
-
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -14,8 +11,8 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // AQUÍ ESTÁ LA CORRECCIÓN DE LA URL
-      await axios.post(`${API_URL}/api/users/register`, {
+      // Usando la ruta relativa, que funciona en local y en producción
+      await axios.post('/api/users/register', {
         name,
         email,
         password,
