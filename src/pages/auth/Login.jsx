@@ -10,24 +10,24 @@ export default function Login() {
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // Usando la ruta relativa, que funciona en local y en producción
-      const response = await axios.post('/api/users/login', {
-        email,
-        password,
-      });
-      
-      login(response.data);
-      alert('¡Inicio de sesión exitoso!');
-      navigate('/');
+  e.preventDefault();
+  try {
+    // Correct the URL by adding /users/
+    const response = await axios.post('/api/users/login', {
+  email,
+  password,
+});
+    
+    login(response.data);
+    alert('¡Inicio de sesión exitoso!');
+    navigate('/');
 
-    } catch (error) {
-      const message = error.response?.data?.message || 'Hubo un error al iniciar sesión.';
-      console.error('Error en el inicio de sesión:', message);
-      alert(message);
-    }
-  };
+  } catch (error) {
+    const message = error.response?.data?.message || 'Hubo un error al iniciar sesión.';
+    console.error('Error en el inicio de sesión:', message);
+    alert(message);
+  }
+};
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
