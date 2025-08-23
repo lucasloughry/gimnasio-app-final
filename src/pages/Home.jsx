@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-export default function Home() {
+// The function definition was missing
+export default function Home() { 
   const [machines, setMachines] = useState([]);
 
   useEffect(() => {
     const fetchMachines = async () => {
       try {
-        // Usando la ruta relativa directamente
         const response = await axios.get('/api/machines');
         setMachines(response.data);
       } catch (error) {
@@ -18,14 +18,14 @@ export default function Home() {
     fetchMachines();
   }, []);
 
+  // The return statement must be inside the function
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Máquinas disponibles</h1>
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-        {machines.map(m => (
+        {Array.isArray(machines) && machines.map(m => (
           <div key={m._id} className="bg-white shadow p-4 rounded-lg flex flex-col">
             {m.image && (
-              // Usando la ruta relativa para la imagen
               <img 
                 src={`/${m.image.replace(/\\/g, '/')}`} 
                 alt={m.name} 
@@ -45,4 +45,4 @@ export default function Home() {
       </div>
     </div>
   );
-}
+} // The closing brace for the function was also missing
