@@ -27,7 +27,7 @@ export default function Home() {
           <div key={m._id} className="bg-white shadow p-4 rounded-lg flex flex-col">
             {m.image && (
               <img 
-                src={`/${m.image.replace(/\\/g, '/')}`} 
+                src={m.image} 
                 alt={m.name} 
                 className="w-full h-48 object-cover rounded-md mb-4"
               />

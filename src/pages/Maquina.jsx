@@ -28,7 +28,7 @@ export default function Maquina() {
       {machine.image && (
         <img 
           // Usando ruta relativa para la imagen
-          src={`/${machine.image.replace(/\\/g, '/')}`} 
+          src={m.image}
           alt={machine.name} 
           className="w-full h-80 object-cover rounded-lg mb-6 shadow-lg"
         />
