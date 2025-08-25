@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-// The function definition was missing
 export default function Home() { 
   const [machines, setMachines] = useState([]);
 
@@ -18,7 +17,6 @@ export default function Home() {
     fetchMachines();
   }, []);
 
-  // The return statement must be inside the function
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Máquinas disponibles</h1>
@@ -45,4 +43,4 @@ export default function Home() {
       </div>
     </div>
   );
-} // The closing brace for the function was also missing
+}
