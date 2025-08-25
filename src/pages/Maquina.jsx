@@ -26,7 +26,7 @@ export default function Maquina() {
     <div className="p-4 max-w-4xl mx-auto">
       {machine.image && (
         <img 
-          src={machine.image}
+          src={machine.image} // URL directa
           alt={machine.name} 
           className="w-full h-80 object-cover rounded-lg mb-6 shadow-lg"
         />
@@ -41,7 +41,7 @@ export default function Maquina() {
           machine.exercises.map((ej, idx) => (
             <li key={idx} className="flex items-center bg-gray-50 p-3 rounded-lg shadow-sm">
               <img 
-                src={`/${ej.gifUrl.replace(/\\/g, '/')}`} 
+                src={ej.gifUrl} // URL directa
                 alt={ej.name}
                 className="w-20 h-20 object-cover rounded-md mr-4 bg-gray-200"
               />
