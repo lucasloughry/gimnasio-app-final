@@ -9,7 +9,6 @@ export default function Maquina() {
   useEffect(() => {
     const fetchMachine = async () => {
       try {
-        // Usando ruta relativa
         const response = await axios.get(`/api/machines/${id}`);
         setMachine(response.data);
       } catch (error) {
@@ -27,8 +26,7 @@ export default function Maquina() {
     <div className="p-4 max-w-4xl mx-auto">
       {machine.image && (
         <img 
-          // Usando ruta relativa para la imagen
-          src={m.image}
+          src={machine.image}
           alt={machine.name} 
           className="w-full h-80 object-cover rounded-lg mb-6 shadow-lg"
         />
@@ -43,7 +41,6 @@ export default function Maquina() {
           machine.exercises.map((ej, idx) => (
             <li key={idx} className="flex items-center bg-gray-50 p-3 rounded-lg shadow-sm">
               <img 
-                // Usando ruta relativa para el GIF
                 src={`/${ej.gifUrl.replace(/\\/g, '/')}`} 
                 alt={ej.name}
                 className="w-20 h-20 object-cover rounded-md mr-4 bg-gray-200"
@@ -55,6 +52,7 @@ export default function Maquina() {
           <p>No hay ejercicios definidos para esta máquina.</p>
         )}
       </ul>
+      
       <Link to="/" className="text-blue-500 mt-6 inline-block">← Volver</Link>
     </div>
   );
