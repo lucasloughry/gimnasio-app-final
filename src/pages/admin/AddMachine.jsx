@@ -20,7 +20,7 @@ export default function AddMachine() {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/machines', formData, {
+      await axios.post('/api/machines', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       alert('Máquina añadida exitosamente');
