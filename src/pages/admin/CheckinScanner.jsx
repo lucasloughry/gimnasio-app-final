@@ -49,7 +49,7 @@ export default function CheckinScanner() {
       setTimeout(() => {
         setMessage('');
         setScannedUser(null);
-      }, 3000); // Muestra la info por 3 segundos
+      }, 5000); // Muestra la info por 3 segundos
     }
   };
 
