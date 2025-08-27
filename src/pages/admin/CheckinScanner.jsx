@@ -3,44 +3,36 @@ import axios from 'axios';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 
 export default function CheckinScanner() {
-  const [message, setMessage] = useState('Haz clic en "Iniciar Escáner" para activar la cámara.');
+  // Cambiamos el mensaje inicial para que sea más claro
+  const [message, setMessage] = useState('La cámara se activará al conceder los permisos.');
   const scannerRef = useRef(null);
 
   useEffect(() => {
-    // Esta función se encarga de crear y configurar el escáner
     const setupScanner = () => {
-      // Evitar duplicar el escáner si ya existe
-      if (scannerRef.current) {
-        return;
-      }
+      if (scannerRef.current) return;
       
       const qrScanner = new Html5QrcodeScanner(
-        "qr-reader", // ID del div donde se renderizará el escáner
-        { fps: 10, qrbox: { width: 250, height: 250 } }, // Configuración: 10 frames por segundo y un cuadro de escaneo
-        false // verbose = false
+        "qr-reader", 
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        false
       );
 
       qrScanner.render(onScanSuccess, onScanFailure);
-      scannerRef.current = qrScanner; // Guardamos la referencia al escáner
+      scannerRef.current = qrScanner;
     };
 
     const onScanSuccess = (decodedText, decodedResult) => {
-      // Esta función se llama cuando se lee un QR exitosamente
-      setMessage('Escaneando...');
+      setMessage('Procesando check-in...');
       handleCheckin(decodedText);
-      if (scannerRef.current) {
-        scannerRef.current.pause(); // Pausar la cámara para evitar múltiples escaneos
-      }
+      if (scannerRef.current) scannerRef.current.pause();
     };
 
     const onScanFailure = (error) => {
       // No hacemos nada en caso de fallo (cuando no encuentra un QR)
     };
 
-    // Llamamos a la función para configurar el escáner
     setupScanner();
 
-    // Función de limpieza para cuando el componente se desmonte
     return () => {
       if (scannerRef.current) {
         scannerRef.current.clear().catch(error => {
@@ -49,7 +41,7 @@ export default function CheckinScanner() {
         scannerRef.current = null;
       }
     };
-  }, []); // El array vacío asegura que se ejecute solo una vez
+  }, []);
 
   const handleCheckin = async (userId) => {
     try {
@@ -58,12 +50,9 @@ export default function CheckinScanner() {
     } catch (error) {
       setMessage(`❌ Error: ${error.response?.data?.message || 'No se pudo registrar el check-in'}`);
     } finally {
-      // Reactivar el escáner después de 3 segundos
       setTimeout(() => {
-        setMessage('Apunta la cámara a un nuevo código QR.');
-        if (scannerRef.current) {
-          scannerRef.current.resume();
-        }
+        setMessage('Listo para el siguiente escaneo.');
+        if (scannerRef.current) scannerRef.current.resume();
       }, 3000);
     }
   };
@@ -71,7 +60,6 @@ export default function CheckinScanner() {
   return (
     <div className="p-8 flex flex-col items-center">
       <h1 className="text-3xl font-bold mb-4">Escaner de Check-in</h1>
-      {/* Este div es donde la librería dibujará la cámara */}
       <div id="qr-reader" className="w-full max-w-md border-4 rounded-lg"></div>
       
       {message && (
