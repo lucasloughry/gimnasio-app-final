@@ -11,6 +11,7 @@ import CheckinScanner from "./pages/admin/CheckinScanner";
 import AddMachine from "./pages/admin/AddMachine";
 import ManageMachines from "./pages/admin/ManageMachines";
 import EditMachine from "./pages/admin/EditMachine";
+import AttendanceLog from "./pages/admin/AttendanceLog";
 
 export default function App() {
   const { user, logout } = useAuth();
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="/admin/add-machine" element={<AddMachine />} /> 
             <Route path="/admin/machines" element={<ManageMachines />} /> {/* <-- RUTA NUEVA */}
             <Route path="/admin/machine/edit/:id" element={<EditMachine />} />
+            <Route path="/admin/attendance" element={<AttendanceLog />} />
           </Route>
         </Routes>
       </main>

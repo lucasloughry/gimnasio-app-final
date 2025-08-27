@@ -19,12 +19,17 @@ export default function Dashboard() {
         >
           Añadir Nueva Máquina
         </Link>
-        {/* --- ENLACE NUEVO --- */}
         <Link 
           to="/admin/machines"
           className="bg-purple-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-purple-700 text-lg text-center"
         >
           Gestionar Máquinas
+        </Link> {/* <-- Esta es la etiqueta que faltaba */}
+        <Link 
+          to="/admin/attendance"
+          className="bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-yellow-600 text-lg text-center"
+        >
+          Ver Asistencias  
         </Link>
       </div>
     </div>

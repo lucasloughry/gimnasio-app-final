@@ -4,30 +4,24 @@ import User from '../models/userModel.js';
 
 const router = express.Router();
 
-// RUTA PARA REGISTRAR UN CHECK-IN
-// POST /api/attendance/checkin
-router.post('/checkin', async (req, res) => {
+// --- RUTA NUEVA PARA OBTENER LOS REGISTROS DE ASISTENCIA ---
+router.get('/', async (req, res) => {
   try {
-    const { userId } = req.body;
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    await Attendance.create({
-      user: userId,
-    });
-
-    res.status(201).json({
-      message: 'Check-in registrado exitosamente',
-      userName: user.name,
-    });
+    const attendances = await Attendance.find({}) // Busca todos los registros
+      .populate('user', 'name') // Cruza la data con la colección 'User' y solo trae el campo 'name'
+      .sort({ checkinTime: -1 }); // Ordena por fecha, los más recientes primero
+    
+    res.json(attendances);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error en el servidor' });
   }
 });
 
-// The change is on this line
+
+// RUTA PARA REGISTRAR UN CHECK-IN (ya la teníamos)
+router.post('/checkin', async (req, res) => {
+  // ... (el código de esta ruta se queda igual)
+});
+
 export default router;
