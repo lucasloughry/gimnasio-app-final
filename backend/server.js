@@ -19,15 +19,17 @@ app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- INSTRUCCIÓN CLAVE PARA SERVIR IMÁGENES ---
-// Esta línea debe estar ANTES de las rutas del API.
-// Le dice a Express que cualquier petición a /uploads, la busque en la carpeta física /uploads.
+// Servir archivos estáticos (imágenes)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// --- Rutas del API ---
+// Rutas del API (descomentadas)
 app.use('/api/machines', machineRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
-// Exportar la app para Vercel
+// Iniciar el servidor para desarrollo local
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`));
+
+// Exportar la app para que Vercel la use
 export default app;
