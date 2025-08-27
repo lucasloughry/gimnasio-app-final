@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { QRCode } from 'qrcode.react';
+import QRCode from 'qrcode.react';
 import axios from 'axios';
 
 export default function Profile() {
