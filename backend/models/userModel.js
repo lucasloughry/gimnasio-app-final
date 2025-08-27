@@ -19,7 +19,13 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
       default: 'user',
+    },  
+    profilePicture: {
+      type: String,
+      default: '', // Por defecto no tendrán foto
     },
+
+    
   },
   {
     timestamps: true,
