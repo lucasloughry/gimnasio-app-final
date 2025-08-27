@@ -11,7 +11,7 @@ export default function AttendanceLog() {
       try {
         const response = await axios.get('/api/attendance');
         setAttendances(response.data);
-        setFilteredAttendances(response.data); // Inicialmente, mostrar todos
+        setFilteredAttendances(response.data);
       } catch (error) {
         console.error("Error al obtener las asistencias:", error);
       }
@@ -19,7 +19,6 @@ export default function AttendanceLog() {
     fetchAttendances();
   }, []);
 
-  // Este efecto se ejecuta cada vez que cambia la fecha del filtro
   useEffect(() => {
     if (filterDate) {
       const filtered = attendances.filter(att => {
@@ -28,7 +27,7 @@ export default function AttendanceLog() {
       });
       setFilteredAttendances(filtered);
     } else {
-      setFilteredAttendances(attendances); // Si no hay fecha, mostrar todos
+      setFilteredAttendances(attendances);
     }
   }, [filterDate, attendances]);
 
@@ -36,16 +35,25 @@ export default function AttendanceLog() {
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-6">Registro de Asistencias</h1>
       
-      {/* Filtro por fecha */}
-      <div className="mb-6">
-        <label htmlFor="filterDate" className="block text-sm font-medium text-gray-700 mb-2">Filtrar por día:</label>
-        <input 
-          type="date" 
-          id="filterDate"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-          className="p-2 border border-gray-300 rounded-md"
-        />
+      <div className="mb-6 flex items-center space-x-4">
+        <div>
+          <label htmlFor="filterDate" className="block text-sm font-medium text-gray-700 mb-2">Filtrar por día:</label>
+          <input 
+            type="date" 
+            id="filterDate"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        <button onClick={() => setFilterDate('')} className="self-end p-2 bg-gray-200 text-sm rounded-md hover:bg-gray-300">
+          Limpiar filtro
+        </button>
+      </div>
+
+      {/* --- CONTADOR DE ASISTENCIAS NUEVO --- */}
+      <div className="mb-4 text-lg bg-gray-100 p-4 rounded-md">
+        <span className="font-semibold">Asistencias mostradas:</span> {filteredAttendances.length}
       </div>
 
       {/* Tabla de asistencias */}
