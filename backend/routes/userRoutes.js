@@ -53,10 +53,17 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email }).lean(); // .lean() es clave aquí
+    const user = await User.findOne({ email }).lean();
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      res.status(200).json({ _id: user._id, name: user.name, email: user.email, role: user.role, token: token });
+      res.status(200).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePicture: user.profilePicture, // <-- AÑADE ESTA LÍNEA
+        token: token,
+      });
     } else {
       res.status(401).json({ message: 'Email o contraseña incorrectos' });
     }

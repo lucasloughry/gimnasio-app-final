@@ -21,7 +21,27 @@ router.get('/', async (req, res) => {
 
 // RUTA PARA REGISTRAR UN CHECK-IN (ya la teníamos)
 router.post('/checkin', async (req, res) => {
-  // ... (el código de esta ruta se queda igual)
-});
+  try {
+    const { userId } = req.body;
 
+    // AÑADE .lean() AQUÍ
+    const user = await User.findById(userId).lean();
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    await Attendance.create({ user: userId });
+
+    // Ahora podemos mostrar la foto en el futuro
+    res.status(201).json({
+      message: 'Check-in registrado exitosamente',
+      userName: user.name,
+      userPicture: user.profilePicture // Enviamos también la foto
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+});
 export default router;
