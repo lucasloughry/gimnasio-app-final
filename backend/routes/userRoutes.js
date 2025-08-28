@@ -100,7 +100,7 @@ router.post('/forgot-password', async (req, res) => {
 
     res.json({ message: 'Email de reseteo enviado.' });
   } catch (error) {
-    console.error(error); // Ahora esto mostrará el error de SendGrid sin romper el servidor
+    console.error(error); // Ahora esto mostrará el error de SendGrid sin romper el servidor 1
     
     // Si el usuario fue encontrado antes del error, limpiamos los tokens
     if (user) {
@@ -165,4 +165,4 @@ router.post('/profile/picture', protect, upload.single('profilePicture'), async 
   }
 });
 
-export default router; //1
+export default router; 
