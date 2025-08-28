@@ -6,6 +6,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import User from '../models/userModel.js';
 import { protect } from '../middleware/authMiddleware.js';
+import crypto from 'crypto'; // Librería nativa de Node para generar tokens seguros
+import sgMail from '@sendgrid/mail'; // Librería de SendGrid
 
 const router = express.Router();
 
@@ -69,6 +71,74 @@ router.post('/login', async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: 'Error en el servidor' });
+  }
+});
+// --- RUTA NUEVA: 1. EL USUARIO PIDE RESTABLECER CONTRASEÑA ---
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      // Por seguridad, no revelamos si el usuario existe o no.
+      return res.json({ message: 'Si el email está registrado, recibirás un correo.' });
+    }
+
+    // 1. Generar un token aleatorio
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // 2. Hashear el token y guardarlo en la base de datos con una fecha de expiración (10 minutos)
+    user.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutos
+    await user.save();
+
+    // 3. Crear el link de reseteo
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    const message = `Has recibido este correo porque solicitaste un reseteo de contraseña. Por favor, haz clic en el siguiente enlace para continuar. El enlace es válido por 10 minutos:\n\n${resetUrl}`;
+    
+    // 4. Configurar y enviar el email
+    const msg = {
+      to: user.email,
+      from: '	poli3sanfernando@gmail.com', // ¡IMPORTANTE! Usa el email que verificaste en SendGrid
+      subject: 'Reseteo de Contraseña - Gimnasio Municipal',
+      text: message,
+    };
+    await sgMail.send(msg);
+
+    res.json({ message: 'Email de reseteo enviado.' });
+  } catch (error) {
+    console.error(error);
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    res.status(500).json({ message: 'Error al enviar el email.' });
+  }
+});
+// --- RUTA NUEVA: 2. EL USUARIO ENVÍA LA NUEVA CONTRASEÑA ---
+router.post('/reset-password/:token', async (req, res) => {
+  try {
+    // 1. Hashear el token que llega en la URL para buscarlo en la DB
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+    // 2. Buscar al usuario por el token y verificar que no haya expirado
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'El token es inválido o ha expirado.' });
+    }
+
+    // 3. Actualizar la contraseña
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(req.body.password, salt);
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Contraseña actualizada exitosamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al restablecer la contraseña.' });
   }
 });
 

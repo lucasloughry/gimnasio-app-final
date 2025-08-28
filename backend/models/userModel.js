@@ -24,8 +24,9 @@ const userSchema = mongoose.Schema(
       type: String,
       default: '', // Por defecto no tendrán foto
     },
-
-    
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+  
   },
   {
     timestamps: true,
