@@ -6,34 +6,45 @@ import { useAuth } from "../../context/AuthContext";
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); // Nuevo estado para el mensaje de error
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    // Correct the URL by adding /users/
-    const response = await axios.post('/api/users/login', {
-  email,
-  password,
-});
-    
-    login(response.data);
-    alert('¡Inicio de sesión exitoso!');
-    navigate('/');
+    e.preventDefault();
+    setError(''); // Limpiar errores anteriores al intentar de nuevo
+    try {
+      const response = await axios.post('/api/users/login', {
+        email,
+        password,
+      });
+      
+      login(response.data);
+      alert('¡Inicio de sesión exitoso!');
+      navigate('/');
 
-  } catch (error) {
-    const message = error.response?.data?.message || 'Hubo un error al iniciar sesión.';
-    console.error('Error en el inicio de sesión:', message);
-    alert(message);
-  }
-};
+    } catch (err) {
+      const message = err.response?.data?.message || 'Hubo un error al iniciar sesión.';
+      setError(message); // En lugar de un alert, guardamos el error en el estado
+    }
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-md">
+      <div className="w-full max-w-sm p-8 space-y-4 bg-white rounded-lg shadow-md">
         <h1 className="text-2xl font-bold text-center">Iniciar Sesión</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* --- MENSAJE DE ERROR DINÁMICO --- */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center" role="alert">
+              <span className="block sm:inline">{error}. </span>
+              <Link to="/forgot-password" className="font-bold underline hover:text-red-900">
+                ¿Quieres restablecerla?
+              </Link>
+            </div>
+          )}
+
           <div>
             <label
               htmlFor="email"
@@ -73,12 +84,6 @@ export default function Login() {
             Entrar
           </button>
         </form>
-        {/* --- ENLACE NUEVO --- */}
-        <div className="text-sm text-center">
-          <Link to="/forgot-password" className="font-medium text-blue-600 hover:underline">
-            ¿Olvidaste tu contraseña?
-          </Link>
-        </div>
         <p className="text-sm text-center text-gray-600">
           ¿No tienes cuenta?{' '}
           <Link to="/register" className="font-medium text-blue-600 hover:underline">
