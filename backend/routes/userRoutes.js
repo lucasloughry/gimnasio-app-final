@@ -75,29 +75,24 @@ router.post('/login', async (req, res) => {
 });
 // --- RUTA NUEVA: 1. EL USUARIO PIDE RESTABLECER CONTRASEÑA ---
 router.post('/forgot-password', async (req, res) => {
+  let user; // <--- Declaramos 'user' aquí afuera
   try {
-    const user = await User.findOne({ email: req.body.email });
+    user = await User.findOne({ email: req.body.email }); // <--- Le asignamos el valor aquí
     if (!user) {
-      // Por seguridad, no revelamos si el usuario existe o no.
       return res.json({ message: 'Si el email está registrado, recibirás un correo.' });
     }
 
-    // 1. Generar un token aleatorio
     const resetToken = crypto.randomBytes(32).toString('hex');
-
-    // 2. Hashear el token y guardarlo en la base de datos con una fecha de expiración (10 minutos)
     user.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutos
+    user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    // 3. Crear el link de reseteo
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
     const message = `Has recibido este correo porque solicitaste un reseteo de contraseña. Por favor, haz clic en el siguiente enlace para continuar. El enlace es válido por 10 minutos:\n\n${resetUrl}`;
     
-    // 4. Configurar y enviar el email
     const msg = {
       to: user.email,
-      from: '	poli3sanfernando@gmail.com', // ¡IMPORTANTE! Usa el email que verificaste en SendGrid
+      from: 'tu-email-verificado@en-sendgrid.com', // ¡Usa el email que verificaste!
       subject: 'Reseteo de Contraseña - Gimnasio Municipal',
       text: message,
     };
@@ -105,10 +100,15 @@ router.post('/forgot-password', async (req, res) => {
 
     res.json({ message: 'Email de reseteo enviado.' });
   } catch (error) {
-    console.error(error);
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    await user.save({ validateBeforeSave: false });
+    console.error(error); // Ahora esto mostrará el error de SendGrid sin romper el servidor
+    
+    // Si el usuario fue encontrado antes del error, limpiamos los tokens
+    if (user) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+    }
+
     res.status(500).json({ message: 'Error al enviar el email.' });
   }
 });
@@ -165,4 +165,4 @@ router.post('/profile/picture', protect, upload.single('profilePicture'), async 
   }
 });
 
-export default router;
+export default router; //1
