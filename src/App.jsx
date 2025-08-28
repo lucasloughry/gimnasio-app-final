@@ -12,6 +12,8 @@ import AddMachine from "./pages/admin/AddMachine";
 import ManageMachines from "./pages/admin/ManageMachines";
 import EditMachine from "./pages/admin/EditMachine";
 import AttendanceLog from "./pages/admin/AttendanceLog";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 export default function App() {
   const { user, logout } = useAuth();
@@ -58,6 +60,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} /> {/* <-- Ruta nueva */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Rutas Protegidas para Admins */}
           <Route element={<AdminRoute />}>

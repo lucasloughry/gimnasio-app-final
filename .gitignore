@@ -1,0 +1,10 @@
+# Dependencias
+node_modules
+/backend/node_modules
+
+# Variables de Entorno
+.env
+/backend/.env
+
+# Archivos de build
+dist

@@ -73,6 +73,12 @@ export default function Login() {
             Entrar
           </button>
         </form>
+        {/* --- ENLACE NUEVO --- */}
+        <div className="text-sm text-center">
+          <Link to="/forgot-password" className="font-medium text-blue-600 hover:underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
         <p className="text-sm text-center text-gray-600">
           ¿No tienes cuenta?{' '}
           <Link to="/register" className="font-medium text-blue-600 hover:underline">
