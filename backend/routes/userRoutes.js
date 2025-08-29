@@ -9,6 +9,8 @@ import { protect } from '../middleware/authMiddleware.js';
 import crypto from 'crypto'; // Librería nativa de Node para generar tokens seguros
 import sgMail from '@sendgrid/mail'; // Librería de SendGrid
 
+console.log("Verificando API Key de SendGrid:", process.env.SENDGRID_API_KEY ? `Existe y termina en ...${process.env.SENDGRID_API_KEY.slice(-5)}` : "NO ENCONTRADA");
+
 const router = express.Router();
 
 // Configuración de Cloudinary
