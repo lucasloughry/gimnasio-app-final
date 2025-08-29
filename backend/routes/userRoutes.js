@@ -94,7 +94,7 @@ router.post('/forgot-password', async (req, res) => {
     
     const msg = {
       to: user.email,
-      from: 'lucas.loughry@etixen.com', // ¡Usa el email que verificaste!
+      from: 'poli3sanfernando@gmail.com', // ¡Usa el email que verificaste!
       subject: 'Reseteo de Contraseña - Gimnasio Municipal',
       text: message,
     };
