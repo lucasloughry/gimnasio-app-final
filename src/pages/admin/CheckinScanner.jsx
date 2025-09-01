@@ -5,24 +5,30 @@ import { Html5Qrcode } from 'html5-qrcode';
 export default function CheckinScanner() {
   const [message, setMessage] = useState('');
   const [scannedUser, setScannedUser] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false); // Nuestro "semáforo"
   const scannerRef = useRef(null);
 
   const startScanner = () => {
     setMessage('Iniciando cámara...');
     
-    const html5QrCode = new Html5Qrcode("qr-reader");
-    scannerRef.current = html5QrCode;
-
+    if (!scannerRef.current) {
+      scannerRef.current = new Html5Qrcode("qr-reader");
+    }
+    
     const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        scannerRef.current.stop().catch(err => console.error("Fallo al detener el escáner.", err));
+      // Si el semáforo está en rojo (isProcessing es true), no hacemos nada.
+      if (isProcessing) {
+        return;
       }
+      
+      // Si está en verde, lo ponemos en rojo y procesamos el check-in.
+      setIsProcessing(true);
       handleCheckin(decodedText);
     };
 
     const config = { fps: 10, qrbox: { width: 250, height: 250 } };
     
-    html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
+    scannerRef.current.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
       .catch(err => {
         setMessage("❌ Error: No se pudo iniciar la cámara.");
         console.error("Error al iniciar la cámara", err);
@@ -38,7 +44,11 @@ export default function CheckinScanner() {
   }, []);
 
   const handleCheckin = async (userId) => {
+    if (scannerRef.current && scannerRef.current.isScanning) {
+      scannerRef.current.stop();
+    }
     setMessage('Procesando check-in...');
+    
     try {
       const response = await axios.post('/api/attendance/checkin', { userId });
       setMessage(`✅ ¡Éxito! Check-in registrado.`);
@@ -46,10 +56,12 @@ export default function CheckinScanner() {
     } catch (error) {
       setMessage(`❌ Error: ${error.response?.data?.message || 'No se pudo registrar el check-in'}`);
     } finally {
+      // Después de 3 segundos, limpiamos todo y ponemos el semáforo en verde de nuevo.
       setTimeout(() => {
         setMessage('');
         setScannedUser(null);
-      }, 5000); // Muestra la info por 3 segundos
+        setIsProcessing(false); // <-- Semáforo en verde
+      }, 3000);
     }
   };
 
@@ -72,6 +84,7 @@ export default function CheckinScanner() {
           <button 
             onClick={startScanner}
             className="mt-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 text-lg"
+            disabled={isProcessing} // Desactivar el botón mientras procesa
           >
             Iniciar Escáner
           </button>
