@@ -15,27 +15,26 @@ import AttendanceLog from "./pages/admin/AttendanceLog";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import LogWorkout from "./pages/LogWorkout";
-import MyWorkouts from "./pages/MyWorkouts"; // <-- 1. IMPORTACIÓN NUEVA
+import MyWorkouts from "./pages/MyWorkouts";
 import ManageWorkoutTemplates from "./pages/admin/ManageWorkoutTemplates";
+import WaterReminder from "./components/WaterReminder"; // <-- 1. Importar el nuevo componente
 
 export default function App() {
   const { user, logout } = useAuth();
 
   return (
     <div>
-      <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
+      <nav className="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
         <Link to="/" className="font-bold text-lg">🏋️ Gimnasio Municipal</Link>
         <div className="space-x-4 flex items-center">
           {user ? (
             <>
-              {/* --- ENLACES NUEVOS PARA EL USUARIO --- */}
               <Link to="/my-workouts" className="font-semibold hover:underline">
-                Mis Entrenamientos
+                Mi Progreso
               </Link>
               <Link to="/log-workout" className="font-semibold hover:underline">
                 Registrar Entrenamiento
               </Link>
-              
               {user.role === 'admin' && (
                 <Link to="/admin/dashboard" className="font-semibold hover:underline">
                   Panel Admin
@@ -62,7 +61,7 @@ export default function App() {
         </div>
       </nav>
 
-      <main>
+      <main className="bg-gray-50 min-h-screen">
         <Routes>
           {/* Rutas Públicas */}
           <Route path="/" element={<Home />} />
@@ -71,11 +70,11 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
-
-          {/* Rutas para usuarios logueados */}
+          
+          {/* Rutas de Usuario Logueado */}
           <Route path="/profile" element={<Profile />} />
-          <Route path="/log-workout" element={<LogWorkout />} /> 
-          <Route path="/my-workouts" element={<MyWorkouts />} /> {/* <-- 2. RUTA NUEVA */}
+          <Route path="/log-workout" element={<LogWorkout />} />
+          <Route path="/my-workouts" element={<MyWorkouts />} />
 
           {/* Rutas Protegidas para Admins */}
           <Route element={<AdminRoute />}>
@@ -89,6 +88,10 @@ export default function App() {
           </Route>
         </Routes>
       </main>
+
+      {/* --- COMPONENTE NUEVO --- */}
+      {/* 2. Mostramos el recordatorio solo si el usuario ha iniciado sesión */}
+      {user && <WaterReminder />}
     </div>
-  )
+  );
 }
