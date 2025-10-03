@@ -15,6 +15,7 @@ import AttendanceLog from "./pages/admin/AttendanceLog";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import LogWorkout from "./pages/LogWorkout";
+import MyWorkouts from "./pages/MyWorkouts"; // <-- 1. IMPORTACIÓN NUEVA
 import ManageWorkoutTemplates from "./pages/admin/ManageWorkoutTemplates";
 
 export default function App() {
@@ -27,11 +28,14 @@ export default function App() {
         <div className="space-x-4 flex items-center">
           {user ? (
             <>
-              {/* --- ENLACE NUEVO --- */}
+              {/* --- ENLACES NUEVOS PARA EL USUARIO --- */}
+              <Link to="/my-workouts" className="font-semibold hover:underline">
+                Mis Entrenamientos
+              </Link>
               <Link to="/log-workout" className="font-semibold hover:underline">
                 Registrar Entrenamiento
               </Link>
-
+              
               {user.role === 'admin' && (
                 <Link to="/admin/dashboard" className="font-semibold hover:underline">
                   Panel Admin
@@ -65,13 +69,14 @@ export default function App() {
           <Route path="/maquina/:id" element={<Maquina />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/profile" element={<Profile />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Rutas de Usuario Logueado */}
-          <Route path="/log-workout" element={<LogWorkout />} />
-          
+          {/* Rutas para usuarios logueados */}
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/log-workout" element={<LogWorkout />} /> 
+          <Route path="/my-workouts" element={<MyWorkouts />} /> {/* <-- 2. RUTA NUEVA */}
+
           {/* Rutas Protegidas para Admins */}
           <Route element={<AdminRoute />}>
             <Route path="/admin/dashboard" element={<Dashboard />} />
