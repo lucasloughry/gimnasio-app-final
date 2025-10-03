@@ -31,6 +31,12 @@ export default function Dashboard() {
         >
           Ver Asistencias  
         </Link>
+        <Link 
+          to="/admin/templates"
+          className="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 text-lg text-center col-span-2 md:col-span-1"
+        >
+          Gestionar Rutinas
+        </Link>
       </div>
     </div>
   );

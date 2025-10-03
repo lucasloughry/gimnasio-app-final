@@ -15,6 +15,7 @@ import AttendanceLog from "./pages/admin/AttendanceLog";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import LogWorkout from "./pages/LogWorkout";
+import ManageWorkoutTemplates from "./pages/admin/ManageWorkoutTemplates";
 
 export default function App() {
   const { user, logout } = useAuth();
@@ -79,6 +80,7 @@ export default function App() {
             <Route path="/admin/machines" element={<ManageMachines />} />
             <Route path="/admin/machine/edit/:id" element={<EditMachine />} />
             <Route path="/admin/attendance" element={<AttendanceLog />} />
+            <Route path="/admin/templates" element={<ManageWorkoutTemplates />} />
           </Route>
         </Routes>
       </main>
