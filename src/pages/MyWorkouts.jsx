@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+// Importamos los componentes necesarios para el gráfico
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function MyWorkouts() {
   const [workouts, setWorkouts] = useState([]);
@@ -12,7 +14,6 @@ export default function MyWorkouts() {
       const token = JSON.parse(localStorage.getItem('userInfo')).token;
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      // Pedimos tanto los entrenamientos como el historial de peso
       const workoutsRes = await axios.get('/api/workouts', config);
       const weightRes = await axios.get('/api/weight', config);
 
@@ -46,10 +47,32 @@ export default function MyWorkouts() {
     }
   };
 
+  // Preparamos los datos para el gráfico
+  const formattedWeightData = weightHistory.map(log => ({
+    date: new Date(log.date).toLocaleDateString(),
+    peso: log.weight,
+  }));
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">Mi Progreso</h1>
       
+      {/* Nuevo contenedor para el gráfico */}
+      <div className="mb-8 bg-white p-6 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-4">Evolución de Peso</h2>
+        {/* Usamos ResponsiveContainer para que el gráfico se adapte al tamaño */}
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={formattedWeightData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="peso" stroke="#8884d8" activeDot={{ r: 8 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Columna de Seguimiento de Peso */}
         <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow">
