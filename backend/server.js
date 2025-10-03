@@ -8,6 +8,8 @@ import machineRoutes from './routes/machineRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import workoutRoutes from './routes/workoutRoutes.js';
+import workoutTemplateRoutes from './routes/workoutTemplateRoutes.js'; // <-- 1. IMPORTACIÓN NUEVA
+
 dotenv.config();
 connectDB();
 
@@ -27,6 +29,7 @@ app.use('/api/machines', machineRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/workouts', workoutRoutes);
+app.use('/api/templates', workoutTemplateRoutes); // <-- 2. RUTA NUEVA
 
 // Iniciar el servidor para desarrollo local
 const PORT = process.env.PORT || 5001;
