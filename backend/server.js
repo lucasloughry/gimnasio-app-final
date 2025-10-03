@@ -7,7 +7,7 @@ import connectDB from './config/db.js';
 import machineRoutes from './routes/machineRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
-
+import workoutRoutes from './routes/workoutRoutes.js';
 dotenv.config();
 connectDB();
 
@@ -26,6 +26,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/machines', machineRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/workouts', workoutRoutes);
 
 // Iniciar el servidor para desarrollo local
 const PORT = process.env.PORT || 5001;
