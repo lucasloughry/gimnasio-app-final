@@ -34,4 +34,28 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+// GET /api/workouts/progress/:exerciseName
+router.get('/progress/:exerciseName', protect, async (req, res) => {
+  try {
+    const exerciseName = req.params.exerciseName;
+
+    // 1. Buscamos todos los entrenamientos del usuario
+    const workouts = await WorkoutLog.find({ user: req.user.id }).sort({ date: 'asc' });
+
+    // 2. Filtramos y extraemos los datos solo para el ejercicio solicitado
+    const progressData = workouts.flatMap(workout => 
+      workout.exercises
+        .filter(ex => ex.name === exerciseName)
+        .map(ex => ({
+          date: workout.date,
+          weight: ex.weight
+        }))
+    );
+
+    res.json(progressData);
+  } catch (error) {
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+});
+
 export default router;
