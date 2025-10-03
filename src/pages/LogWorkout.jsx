@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // <-- 1. Importar useAuth
 
 export default function LogWorkout() {
   const [templates, setTemplates] = useState([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
-  const [duration, setDuration] = useState(''); // <-- Nuevo estado para la duración
+  const [duration, setDuration] = useState('');
   const [exercises, setExercises] = useState([]);
   const navigate = useNavigate();
+  const { logout } = useAuth(); // <-- 2. Obtener la función logout
 
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const token = JSON.parse(localStorage.getItem('userInfo')).token;
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        if (!userInfo || !userInfo.token) return;
         const response = await axios.get('/api/templates', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${userInfo.token}` },
         });
         setTemplates(response.data);
       } catch (error) {
@@ -44,23 +47,32 @@ export default function LogWorkout() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = JSON.parse(localStorage.getItem('userInfo')).token;
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      if (!userInfo || !userInfo.token) throw new Error('No autenticado');
+      
       const selectedTemplate = templates.find(t => t._id === selectedTemplateId);
       
       await axios.post(
         '/api/workouts',
         { 
           name: selectedTemplate.name,
-          duration, // <-- Enviamos la duración al backend
+          duration,
           exercises 
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${userInfo.token}` } }
       );
       alert('¡Entrenamiento guardado con éxito!');
       navigate('/my-workouts');
     } catch (error) {
-      console.error('Error al guardar el entrenamiento:', error);
-      alert('Error al guardar el entrenamiento.');
+      // --- 3. Lógica Mejorada para Manejar Sesión Expirada ---
+      if (error.response && error.response.status === 401) {
+        alert('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
+        logout(); // Limpiamos la sesión del usuario
+        navigate('/login'); // Lo redirigimos al login
+      } else {
+        console.error('Error al guardar el entrenamiento:', error);
+        alert('Error al guardar el entrenamiento.');
+      }
     }
   };
 
@@ -84,7 +96,6 @@ export default function LogWorkout() {
               ))}
             </select>
           </div>
-          {/* --- CAMPO NUEVO PARA LA DURACIÓN --- */}
           <div>
             <label htmlFor="duration" className="block text-sm font-medium text-gray-700">Duración (minutos)</label>
             <input
