@@ -24,17 +24,22 @@ const workoutLogSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: 'User', // Referencia al usuario que hizo el entrenamiento
+      ref: 'User',
     },
     date: {
       type: Date,
-      default: Date.now, // La fecha se guarda automáticamente
+      default: Date.now,
     },
     name: {
       type: String,
-      required: true, // Ej: "Día 1: Tren Inferior"
+      required: true,
     },
-    exercises: [exerciseLogSchema], // Una lista de ejercicios
+    // --- CAMPO NUEVO ---
+    duration: {
+      type: Number, // Guardaremos la duración en minutos
+      required: true,
+    },
+    exercises: [exerciseLogSchema],
   },
   {
     timestamps: true,
