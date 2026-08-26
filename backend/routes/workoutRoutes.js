@@ -49,7 +49,9 @@ router.get('/progress/:exerciseName', protect, async (req, res) => {
         .filter(ex => ex.name === exerciseName)
         .map(ex => ({
           date: workout.date,
-          weight: ex.weight
+          weight: ex.weight,
+          reps: ex.reps,
+          sets: ex.sets,
         }))
     );
     res.json(progressData);

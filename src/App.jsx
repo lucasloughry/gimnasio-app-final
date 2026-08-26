@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Maquina from "./pages/Maquina";
@@ -24,23 +24,33 @@ export default function App() {
   const { user, logout } = useAuth();
   // 1. Nuevo estado para controlar si el menú móvil está abierto o cerrado
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme ? savedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
 
   return (
     <div>
-      <nav className="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md relative">
-        <Link to="/" className="font-bold text-lg" onClick={() => setIsMenuOpen(false)}>🏋️ Gimnasio Municipal</Link>
+      <nav className="sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-4 py-3 text-white shadow-lg backdrop-blur sm:px-6">
+        <Link to="/" className="flex items-center gap-3 font-black tracking-tight" onClick={() => setIsMenuOpen(false)}><span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-400 text-slate-950">G</span><span>Gimnasio <span className="text-emerald-400">Municipal</span></span></Link>
         
         {/* --- Menú para pantallas grandes (Desktop) --- */}
         <div className="hidden md:flex space-x-4 items-center">
+          <button onClick={() => setIsDark(theme => !theme)} className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-lg transition hover:bg-white/10" aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'} title={isDark ? 'Modo claro' : 'Modo oscuro'}>{isDark ? '☀️' : '🌙'}</button>
           {user ? (
             <>
-              <Link to="/my-workouts" className="font-semibold hover:underline">Mi Progreso</Link>
-              <Link to="/log-workout" className="font-semibold hover:underline">Registrar Entrenamiento</Link>
+              <Link to="/my-workouts" className="font-semibold text-slate-300 transition hover:text-white">Mi progreso</Link>
+              <Link to="/log-workout" className="rounded-xl bg-emerald-400 px-4 py-2 font-bold text-slate-950 transition hover:bg-emerald-300">+ Entrenar</Link>
               {user.role === 'admin' && (
                 <Link to="/admin/dashboard" className="font-semibold hover:underline">Panel Admin</Link>
               )}
               <Link to="/profile" className="font-semibold hover:underline">Hola, {user.name}</Link>
-              <button onClick={logout} className="bg-red-500 font-semibold py-2 px-3 rounded hover:bg-red-600">Logout</button>
+              <button onClick={logout} className="font-semibold text-slate-400 hover:text-red-400">Salir</button>
             </>
           ) : (
             <>
@@ -52,7 +62,7 @@ export default function App() {
 
         {/* --- Botón de Hamburguesa para pantallas pequeñas (Móvil) --- */}
         <div className="md:hidden">
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <button aria-label="Abrir menú" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen(!isMenuOpen)} className="rounded-xl border border-white/10 p-2">
             {/* Ícono de hamburguesa (tres líneas) */}
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
           </button>
@@ -60,17 +70,18 @@ export default function App() {
 
         {/* --- Menú desplegable para Móvil --- */}
         {isMenuOpen && (
-          <div className="absolute top-full left-0 w-full bg-blue-600 md:hidden z-10">
-            <div className="flex flex-col items-center p-4 space-y-4">
+          <div className="absolute left-0 top-full z-10 w-full border-t border-white/10 bg-slate-950 shadow-2xl md:hidden">
+            <div className="flex flex-col items-stretch space-y-2 p-4 text-center">
+              <button onClick={() => setIsDark(theme => !theme)} className="rounded-xl border border-white/10 p-3 font-semibold text-slate-300">{isDark ? '☀️ Usar modo claro' : '🌙 Usar modo oscuro'}</button>
               {user ? (
                 <>
                   <Link to="/my-workouts" className="font-semibold hover:underline" onClick={() => setIsMenuOpen(false)}>Mi Progreso</Link>
-                  <Link to="/log-workout" className="font-semibold hover:underline" onClick={() => setIsMenuOpen(false)}>Registrar Entrenamiento</Link>
+                  <Link to="/log-workout" className="rounded-xl bg-emerald-400 p-3 font-bold text-slate-950" onClick={() => setIsMenuOpen(false)}>+ Registrar entrenamiento</Link>
                   {user.role === 'admin' && (
                     <Link to="/admin/dashboard" className="font-semibold hover:underline" onClick={() => setIsMenuOpen(false)}>Panel Admin</Link>
                   )}
                   <Link to="/profile" className="font-semibold hover:underline" onClick={() => setIsMenuOpen(false)}>Hola, {user.name}</Link>
-                  <button onClick={() => { logout(); setIsMenuOpen(false); }} className="w-full bg-red-500 font-semibold py-2 px-3 rounded hover:bg-red-600">Logout</button>
+                  <button onClick={() => { logout(); setIsMenuOpen(false); }} className="w-full p-3 font-semibold text-red-400">Cerrar sesión</button>
                 </>
               ) : (
                 <>
@@ -83,7 +94,7 @@ export default function App() {
         )}
       </nav>
 
-      <main className="bg-gray-50 min-h-screen">
+      <main className="min-h-screen bg-slate-50 transition-colors duration-300 dark:bg-slate-950">
         <Routes>
           {/* ... (el resto de tus rutas no cambia) ... */}
           <Route path="/" element={<Home />} />

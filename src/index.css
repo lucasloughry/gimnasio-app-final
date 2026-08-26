@@ -10,3 +10,22 @@
   }
   button, input, select { @apply focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2; }
 }
+
+html.dark { color-scheme: dark; }
+html.dark body { @apply bg-slate-950 text-slate-100; }
+
+/* Compatibilidad oscura para las pantallas existentes mientras conservamos
+   sus clases de Tailwind originales. */
+.dark .bg-white { background-color: rgb(15 23 42); }
+.dark .bg-gray-50, .dark .bg-gray-100 { background-color: rgb(2 6 23); }
+.dark .bg-gray-200 { background-color: rgb(30 41 59); }
+.dark .text-gray-600, .dark .text-gray-700 { color: rgb(148 163 184); }
+.dark .text-slate-500 { color: rgb(148 163 184); }
+.dark .text-slate-900 { color: rgb(241 245 249); }
+.dark .border-gray-200, .dark .border-gray-300, .dark .border-slate-200 { border-color: rgb(51 65 85); }
+.dark input, .dark select, .dark textarea {
+  background-color: rgb(15 23 42);
+  border-color: rgb(51 65 85);
+  color: rgb(241 245 249);
+}
+.dark input::placeholder, .dark textarea::placeholder { color: rgb(100 116 139); }
