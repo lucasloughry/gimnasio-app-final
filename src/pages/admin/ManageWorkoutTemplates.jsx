@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
       const [templates, setTemplates] = useState([]);
       const [name, setName] = useState('');
       const [category, setCategory] = useState('');
-      const [exercises, setExercises] = useState([{ name: '', series: '', reps: '' }]);
+      const [exercises, setExercises] = useState([{ name: '', sets: '3', reps: '10' }]);
     
       const fetchTemplates = async () => {
         try {
@@ -27,7 +27,7 @@ import { useState, useEffect } from 'react';
       };
     
       const addExercise = () => {
-        setExercises([...exercises, { name: '', series: '', reps: '' }]);
+        setExercises([...exercises, { name: '', sets: '3', reps: '10' }]);
       };
     
       const removeExercise = (index) => {
@@ -44,7 +44,7 @@ import { useState, useEffect } from 'react';
           // Limpiar formulario y recargar la lista
           setName('');
           setCategory('');
-          setExercises([{ name: '', series: '', reps: '' }]);
+          setExercises([{ name: '', sets: '3', reps: '10' }]);
           fetchTemplates();
         } catch (error) {
           console.error('Error al crear la plantilla:', error);
@@ -74,8 +74,8 @@ import { useState, useEffect } from 'react';
                 {exercises.map((exercise, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <input type="text" name="name" value={exercise.name} onChange={e => handleExerciseChange(index, e)} className="w-full p-2 border rounded-md" placeholder="Nombre del Ejercicio" required />
-                    <input type="text" name="series" value={exercise.series} onChange={e => handleExerciseChange(index, e)} className="w-20 p-2 border rounded-md" placeholder="4x" required />
-                    <input type="text" name="reps" value={exercise.reps} onChange={e => handleExerciseChange(index, e)} className="w-20 p-2 border rounded-md" placeholder="12" required />
+                    <input type="number" min="1" name="sets" value={exercise.sets} onChange={e => handleExerciseChange(index, e)} className="w-20 p-2 border rounded-md" aria-label="Series" required />
+                    <input type="number" min="1" name="reps" value={exercise.reps} onChange={e => handleExerciseChange(index, e)} className="w-20 p-2 border rounded-md" aria-label="Repeticiones" required />
                     {index > 0 && <button type="button" onClick={() => removeExercise(index)} className="text-red-500 font-bold">X</button>}
                   </div>
                 ))}
@@ -93,7 +93,7 @@ import { useState, useEffect } from 'react';
                   <li key={template._id} className="py-3">
                     <p className="font-bold text-lg">{template.name} <span className="text-sm font-normal text-gray-500">({template.category})</span></p>
                     <ul className="list-disc pl-5 mt-1">
-                      {template.exercises.map((ex, i) => <li key={i} className="text-sm">{ex.name} {ex.series}x{ex.reps}</li>)}
+                      {template.exercises.map((ex, i) => <li key={i} className="text-sm">{ex.name} · {ex.sets || 3}×{ex.reps || 10}</li>)}
                     </ul>
                   </li>
                 ))}
@@ -103,4 +103,3 @@ import { useState, useEffect } from 'react';
         </div>
       );
     }
-    

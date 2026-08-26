@@ -17,7 +17,16 @@ const workoutTemplateSchema = new mongoose.Schema(
           type: String,
           required: true,
         },
-        // Podríamos añadir más campos a futuro, como un GIF sugerido.
+        sets: {
+          type: Number,
+          default: 3,
+          min: 1,
+        },
+        reps: {
+          type: Number,
+          default: 10,
+          min: 1,
+        },
       },
     ],
   },

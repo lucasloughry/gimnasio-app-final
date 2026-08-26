@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // <-- 1. Importar useAuth
 
 export default function LogWorkout() {
@@ -13,6 +13,7 @@ export default function LogWorkout() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { logout } = useAuth(); // <-- 2. Obtener la función logout
 
   useEffect(() => {
@@ -34,13 +35,23 @@ export default function LogWorkout() {
     fetchTemplates();
   }, []);
 
+  useEffect(() => {
+    const templateId = searchParams.get('template');
+    if (!templateId || !templates.length || selectedTemplateId) return;
+    const selected = templates.find(template => template._id === templateId);
+    if (!selected) return;
+    setSelectedTemplateId(selected._id);
+    setWorkoutName(selected.name);
+    setExercises(selected.exercises.map(exercise => ({ name: exercise.name, sets: exercise.sets || exercise.series || '3', reps: exercise.reps || '10', weight: '' })));
+  }, [searchParams, templates, selectedTemplateId]);
+
   const handleTemplateChange = (e) => {
     const templateId = e.target.value;
     setSelectedTemplateId(templateId);
     if (templateId) {
       const selected = templates.find(t => t._id === templateId);
       setWorkoutName(selected.name);
-      setExercises(selected.exercises.map(ex => ({ name: ex.name, sets: '3', reps: '10', weight: '' })));
+      setExercises(selected.exercises.map(ex => ({ name: ex.name, sets: ex.sets || ex.series || '3', reps: ex.reps || '10', weight: '' })));
     } else {
       setExercises([]);
       setWorkoutName('');

@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import TodayWorkout from '../components/TodayWorkout';
 
 export default function Home() { 
   const [machines, setMachines] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchMachines = async () => {
       try {
-        const response = await axios.get('/api/machines');
-        setMachines(response.data);
+        const [machinesResponse, templatesResponse] = await Promise.all([
+          axios.get('/api/machines'),
+          axios.get('/api/templates'),
+        ]);
+        setMachines(machinesResponse.data);
+        setTemplates(templatesResponse.data);
       } catch (error) {
         console.error("Error al obtener las máquinas:", error);
         setError('No pudimos cargar las máquinas. Intentá nuevamente.');
@@ -32,6 +38,7 @@ export default function Home() {
           <Link to="/my-workouts" className="rounded-xl bg-white/60 px-5 py-3 font-bold">Ver mi progreso</Link>
         </div>
       </section>
+      <TodayWorkout templates={templates} isLoading={isLoading} />
       <div className="mb-5 flex items-end justify-between"><div><p className="text-xs font-bold uppercase tracking-widest text-emerald-600">Equipamiento</p><h2 className="mt-1 text-2xl font-black">Máquinas disponibles</h2></div><span className="text-sm text-slate-500">{machines.length} máquinas</span></div>
       {error && <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
       {isLoading && <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{[1,2,3].map(item => <div key={item} className="h-80 animate-pulse rounded-3xl bg-slate-200" />)}</div>}
