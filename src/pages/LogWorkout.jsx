@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext'; // <-- 1. Importar useAuth
 
 export default function LogWorkout() {
   const [templates, setTemplates] = useState([]);
+  const [exerciseCatalog, setExerciseCatalog] = useState([]);
+  const [exerciseToAdd, setExerciseToAdd] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [exercises, setExercises] = useState([]);
   const [workoutName, setWorkoutName] = useState('');
@@ -24,10 +26,16 @@ export default function LogWorkout() {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         if (!userInfo || !userInfo.token) return;
-        const response = await axios.get('/api/templates', {
-          headers: { Authorization: `Bearer ${userInfo.token}` },
-        });
-        setTemplates(response.data);
+        const [templatesResponse, machinesResponse] = await Promise.all([
+          axios.get('/api/templates', { headers: { Authorization: `Bearer ${userInfo.token}` } }),
+          axios.get('/api/machines'),
+        ]);
+        setTemplates(templatesResponse.data);
+        const names = [
+          ...templatesResponse.data.flatMap(template => (template.exercises || []).map(exercise => exercise.name)),
+          ...machinesResponse.data.flatMap(machine => (machine.exercises || []).map(exercise => exercise.name)),
+        ].filter(Boolean);
+        setExerciseCatalog([...new Set(names)].sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.error("Error al obtener las plantillas:", error);
         setError('No pudimos cargar tus rutinas. Revisá tu conexión e intentá nuevamente.');
@@ -87,8 +95,9 @@ export default function LogWorkout() {
     setExercises(values);
   };
 
-  const addExercise = () => {
-    setExercises(current => [...current, { name: '', sets: '3', reps: '10', weight: '' }]);
+  const addExercise = (name = '') => {
+    setExercises(current => [...current, { name, sets: '3', reps: '10', weight: '' }]);
+    setExerciseToAdd('');
   };
 
   const removeExercise = (index) => {
@@ -177,7 +186,15 @@ export default function LogWorkout() {
             <h3 className="text-xl font-bold">Ejercicios</h3>
             <p className="text-sm text-slate-500">{exercises.length} cargados</p>
           </div>
-          <button type="button" onClick={addExercise} className="rounded-xl bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 hover:bg-emerald-200">+ Agregar</button>
+          <button type="button" onClick={() => addExercise()} className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200">+ Crear nuevo</button>
+        </div>
+
+        <div className="flex flex-col gap-2 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/60 sm:flex-row">
+          <select value={exerciseToAdd} onChange={event => setExerciseToAdd(event.target.value)} className="min-w-0 flex-1 rounded-xl border border-slate-300 p-3 dark:border-slate-700">
+            <option value="">Elegí un ejercicio existente…</option>
+            {exerciseCatalog.map(name => <option key={name} value={name}>{name}</option>)}
+          </select>
+          <button type="button" disabled={!exerciseToAdd} onClick={() => addExercise(exerciseToAdd)} className="rounded-xl bg-emerald-400 px-5 py-3 font-bold text-slate-950 disabled:opacity-40">Agregar ejercicio</button>
         </div>
 
         {isLoading && <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">Cargando rutinas…</p>}

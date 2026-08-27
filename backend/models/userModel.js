@@ -26,6 +26,13 @@ const userSchema = mongoose.Schema(
     },
     passwordResetToken: String,
     passwordResetExpires: Date,
+    trainingPlan: [
+      {
+        _id: false,
+        day: { type: Number, min: 0, max: 6, required: true },
+        template: { type: mongoose.Schema.Types.ObjectId, ref: 'WorkoutTemplate', required: true },
+      },
+    ],
   
   },
   {

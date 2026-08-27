@@ -2,22 +2,28 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import TodayWorkout from '../components/TodayWorkout';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() { 
   const [machines, setMachines] = useState([]);
   const [templates, setTemplates] = useState([]);
+  const [trainingPlan, setTrainingPlan] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchMachines = async () => {
       try {
-        const [machinesResponse, templatesResponse] = await Promise.all([
+        const requests = [
           axios.get('/api/machines'),
           axios.get('/api/templates'),
-        ]);
+        ];
+        if (user?.token) requests.push(axios.get('/api/users/profile/training-plan', { headers: { Authorization: `Bearer ${user.token}` } }));
+        const [machinesResponse, templatesResponse, planResponse] = await Promise.all(requests);
         setMachines(machinesResponse.data);
         setTemplates(templatesResponse.data);
+        if (planResponse) setTrainingPlan(planResponse.data);
       } catch (error) {
         console.error("Error al obtener las máquinas:", error);
         setError('No pudimos cargar las máquinas. Intentá nuevamente.');
@@ -26,7 +32,18 @@ export default function Home() {
       }
     };
     fetchMachines();
-  }, []);
+  }, [user?.token]);
+
+  const saveTrainingPlan = async plan => {
+    try {
+      const response = await axios.put('/api/users/profile/training-plan', { plan }, { headers: { Authorization: `Bearer ${user.token}` } });
+      setTrainingPlan(response.data);
+      return true;
+    } catch (saveError) {
+      setError(saveError.response?.data?.message || 'No pudimos guardar tu planificación semanal.');
+      return false;
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -38,7 +55,7 @@ export default function Home() {
           <Link to="/my-workouts" className="rounded-xl bg-white/60 px-5 py-3 font-bold">Ver mi progreso</Link>
         </div>
       </section>
-      <TodayWorkout templates={templates} isLoading={isLoading} />
+      {user && <TodayWorkout templates={templates} plan={trainingPlan} isLoading={isLoading} onSavePlan={saveTrainingPlan} />}
       <div className="mb-5 flex items-end justify-between"><div><p className="text-xs font-bold uppercase tracking-widest text-emerald-600">Equipamiento</p><h2 className="mt-1 text-2xl font-black">Máquinas disponibles</h2></div><span className="text-sm text-slate-500">{machines.length} máquinas</span></div>
       {error && <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
       {isLoading && <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{[1,2,3].map(item => <div key={item} className="h-80 animate-pulse rounded-3xl bg-slate-200" />)}</div>}

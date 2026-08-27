@@ -130,4 +130,26 @@ router.post('/profile/picture', protect, upload.single('profilePicture'), async 
   }
 });
 
+router.get('/profile/training-plan', protect, async (req, res) => {
+  const user = await User.findById(req.user.id).select('trainingPlan').lean();
+  res.json(user?.trainingPlan || []);
+});
+
+router.put('/profile/training-plan', protect, async (req, res) => {
+  try {
+    const plan = Array.isArray(req.body.plan) ? req.body.plan : [];
+    const validPlan = plan
+      .filter(item => Number.isInteger(Number(item.day)) && item.template)
+      .map(item => ({ day: Number(item.day), template: item.template }));
+    const uniqueDays = new Set(validPlan.map(item => item.day));
+    if (uniqueDays.size !== validPlan.length || validPlan.some(item => item.day < 0 || item.day > 6)) {
+      return res.status(400).json({ message: 'El plan semanal contiene días inválidos o repetidos.' });
+    }
+    const user = await User.findByIdAndUpdate(req.user.id, { trainingPlan: validPlan }, { new: true, runValidators: true }).select('trainingPlan');
+    res.json(user.trainingPlan);
+  } catch (error) {
+    res.status(400).json({ message: 'No pudimos guardar el plan semanal.' });
+  }
+});
+
 export default router;
