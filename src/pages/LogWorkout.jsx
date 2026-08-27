@@ -6,12 +6,15 @@ import { useAuth } from '../context/AuthContext'; // <-- 1. Importar useAuth
 export default function LogWorkout() {
   const [templates, setTemplates] = useState([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
-  const [duration, setDuration] = useState('');
   const [exercises, setExercises] = useState([]);
   const [workoutName, setWorkoutName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [sessionStartedAt] = useState(() => Date.now());
+  const [completedSets, setCompletedSets] = useState({});
+  const [restSeconds, setRestSeconds] = useState(0);
+  const [restFinished, setRestFinished] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { logout } = useAuth(); // <-- 2. Obtener la función logout
@@ -45,9 +48,29 @@ export default function LogWorkout() {
     setExercises(selected.exercises.map(exercise => ({ name: exercise.name, sets: exercise.sets || exercise.series || '3', reps: exercise.reps || '10', weight: '' })));
   }, [searchParams, templates, selectedTemplateId]);
 
+  useEffect(() => {
+    if (restSeconds <= 0) return undefined;
+    const timer = window.setTimeout(() => {
+      if (restSeconds > 1) {
+        setRestSeconds(restSeconds - 1);
+        return;
+      }
+      setRestSeconds(0);
+      setRestFinished(true);
+      window.setTimeout(() => setRestFinished(false), 7000);
+      if (navigator.vibrate) navigator.vibrate([250, 120, 250]);
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Descanso terminado 💪', { body: 'Es momento de comenzar la próxima serie.', icon: '/pwa-192x192.png' });
+      }
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [restSeconds]);
+
   const handleTemplateChange = (e) => {
     const templateId = e.target.value;
     setSelectedTemplateId(templateId);
+    setCompletedSets({});
+    setRestSeconds(0);
     if (templateId) {
       const selected = templates.find(t => t._id === templateId);
       setWorkoutName(selected.name);
@@ -72,6 +95,13 @@ export default function LogWorkout() {
     setExercises(current => current.filter((_, exerciseIndex) => exerciseIndex !== index));
   };
 
+  const finishSet = index => {
+    const totalSets = Number(exercises[index].sets) || 1;
+    setCompletedSets(current => ({ ...current, [index]: Math.min((current[index] || 0) + 1, totalSets) }));
+    setRestFinished(false);
+    setRestSeconds(60);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -84,7 +114,7 @@ export default function LogWorkout() {
         '/api/workouts',
         { 
           name: workoutName || 'Entrenamiento libre',
-          duration: Number(duration),
+          duration: Math.max(1, Math.round((Date.now() - sessionStartedAt) / 60000)),
           exercises: exercises.map(exercise => ({
             ...exercise,
             sets: Number(exercise.sets),
@@ -140,18 +170,6 @@ export default function LogWorkout() {
             <label htmlFor="workout-name" className="block text-sm font-medium text-gray-700">Nombre de la sesión</label>
             <input id="workout-name" value={workoutName} onChange={(e) => setWorkoutName(e.target.value)} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="Ej: Tren superior" required />
           </div>
-          <div>
-            <label htmlFor="duration" className="block text-sm font-medium text-gray-700">Duración (minutos)</label>
-            <input
-              type="number"
-              id="duration"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md"
-              placeholder="Ej: 60"
-              required
-            />
-          </div>
         </div>
 
         <div className="flex items-center justify-between border-t pt-5">
@@ -183,6 +201,10 @@ export default function LogWorkout() {
               <label className="block text-xs font-medium text-gray-600">Peso (kg)</label>
               <input type="number" name="weight" value={exercise.weight} onChange={e => handleExerciseChange(index, e)} className="w-full mt-1 p-2 border rounded-md" placeholder="0" min="0" step="0.5" />
             </div>
+            <div className="col-span-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-3 dark:border-slate-700 sm:col-span-6">
+              <span className="text-sm font-semibold text-slate-500">{completedSets[index] || 0} de {exercise.sets || 0} series completadas</span>
+              <button type="button" disabled={(completedSets[index] || 0) >= Number(exercise.sets || 0)} onClick={() => finishSet(index)} className="rounded-xl bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 transition hover:bg-emerald-200 disabled:opacity-40">✓ Serie terminada · descansar 1:00</button>
+            </div>
           </div>
         ))}
         
@@ -198,6 +220,8 @@ export default function LogWorkout() {
           </div>
         )}
       </form>
+      {restSeconds > 0 && <button type="button" onClick={() => setRestSeconds(0)} className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-4 rounded-2xl bg-slate-950 px-5 py-3 text-white shadow-2xl ring-1 ring-white/10"><span className="grid h-11 w-11 place-items-center rounded-full bg-emerald-400 font-black text-slate-950">{restSeconds}</span><span className="text-left"><strong className="block">Descansando</strong><small className="text-slate-400">Tocá para omitir</small></span></button>}
+      {restFinished && <div className="fixed bottom-5 left-1/2 z-40 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl bg-emerald-400 p-4 text-center font-black text-slate-950 shadow-2xl">¡Descanso terminado! Próxima serie 💪</div>}
     </div>
   );
 }
