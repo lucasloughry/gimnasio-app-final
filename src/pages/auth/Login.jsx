@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import GoogleSignIn from '../../components/GoogleSignIn';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -44,6 +45,8 @@ export default function Login() {
         </div>
         <div className="space-y-5 p-8">
         <h2 className="text-2xl font-bold text-slate-900">Iniciar sesión</h2>
+        <GoogleSignIn />
+        <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-slate-400"><span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />o con email<span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" /></div>
         <form onSubmit={handleSubmit} className="space-y-4">
           
           {/* --- MENSAJE DE ERROR DINÁMICO --- */}

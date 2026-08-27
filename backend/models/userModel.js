@@ -13,7 +13,12 @@ const userSchema = mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Por favor, añade una contraseña'],
+      required: function requiredPassword() { return !this.googleId; },
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
     role: {
       type: String,

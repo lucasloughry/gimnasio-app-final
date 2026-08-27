@@ -53,7 +53,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Ingresá tu email y contraseña.' });
     }
     const user = await User.findOne({ email }).lean();
-    if (user && (await bcrypt.compare(password, user.password))) {
+    if (user?.password && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
       res.status(200).json({ _id: user._id, name: user.name, email: user.email, role: user.role, profilePicture: user.profilePicture, token: token });
     } else {
@@ -127,6 +127,40 @@ router.post('/profile/picture', protect, upload.single('profilePicture'), async 
     }
   } catch (error) {
     res.status(500).json({ message: 'Error en el servidor' });
+  }
+});
+
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential || !process.env.GOOGLE_CLIENT_ID) {
+      return res.status(400).json({ message: 'El acceso con Google no está configurado.' });
+    }
+
+    const googleResponse = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
+    if (!googleResponse.ok) return res.status(401).json({ message: 'Google no pudo validar el acceso.' });
+    const profile = await googleResponse.json();
+    const validIssuer = profile.iss === 'https://accounts.google.com' || profile.iss === 'accounts.google.com';
+    if (profile.aud !== process.env.GOOGLE_CLIENT_ID || profile.email_verified !== 'true' || !validIssuer) {
+      return res.status(401).json({ message: 'La cuenta de Google no es válida para esta aplicación.' });
+    }
+
+    const email = profile.email.toLowerCase();
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({ name: profile.name || email.split('@')[0], email, googleId: profile.sub, profilePicture: profile.picture || '' });
+    } else {
+      if (user.googleId && user.googleId !== profile.sub) return res.status(409).json({ message: 'Ese email ya está vinculado con otra cuenta de Google.' });
+      user.googleId = profile.sub;
+      if (!user.profilePicture && profile.picture) user.profilePicture = profile.picture;
+      await user.save();
+    }
+
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ _id: user.id, name: user.name, email: user.email, role: user.role, profilePicture: user.profilePicture, token });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({ message: 'No pudimos iniciar sesión con Google.' });
   }
 });
 
