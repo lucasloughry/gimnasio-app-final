@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { CATALOG, GROUPS, EQUIPMENT, ROUTINES, REFERENCE, createExercise, seriesOf, suggest, normalizeName } from '../workoutData';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // <-- 1. Importar useAuth
 
 export default function LogWorkout() {
-  const [templates, setTemplates] = useState([]);
-  const [exerciseCatalog, setExerciseCatalog] = useState([]);
+  const [templates, setTemplates] = useState(ROUTINES);
+  const [history, setHistory] = useState([]);
+  const [muscleGroup, setMuscleGroup] = useState(GROUPS[0]);
+  const [exerciseCatalog, setExerciseCatalog] = useState(CATALOG.map(ex=>ex.name));
   const [exerciseToAdd, setExerciseToAdd] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [exercises, setExercises] = useState([]);
@@ -30,8 +33,9 @@ export default function LogWorkout() {
           axios.get('/api/templates', { headers: { Authorization: `Bearer ${userInfo.token}` } }),
           axios.get('/api/machines'),
         ]);
-        setTemplates(templatesResponse.data);
+        setTemplates([...ROUTINES, ...templatesResponse.data]);
         const names = [
+          ...CATALOG.map(ex=>ex.name),
           ...templatesResponse.data.flatMap(template => (template.exercises || []).map(exercise => exercise.name)),
           ...machinesResponse.data.flatMap(machine => (machine.exercises || []).map(exercise => exercise.name)),
         ].filter(Boolean);
@@ -44,6 +48,8 @@ export default function LogWorkout() {
       }
     };
     fetchTemplates();
+    const info = JSON.parse(localStorage.getItem('userInfo') || 'null');
+    if (info?.token) axios.get('/api/workouts', {headers:{Authorization: `Bearer ${info.token}`}}).then(r=>setHistory(r.data)).catch(()=>setError('No pudimos cargar el historial. Podés registrar la sesión, pero las sugerencias no están disponibles.'));
   }, []);
 
   useEffect(() => {
@@ -53,7 +59,8 @@ export default function LogWorkout() {
     if (!selected) return;
     setSelectedTemplateId(selected._id);
     setWorkoutName(selected.name);
-    setExercises(selected.exercises.map(exercise => ({ name: exercise.name, sets: exercise.sets || exercise.series || '3', reps: exercise.reps || '10', weight: '' })));
+    if (GROUPS.includes(selected.category)) setMuscleGroup(selected.category);
+    setExercises(selected.exercises.map(exercise => (createExercise(exercise.name, exercise.sets, exercise.reps))));
   }, [searchParams, templates, selectedTemplateId]);
 
   useEffect(() => {
@@ -82,7 +89,7 @@ export default function LogWorkout() {
     if (templateId) {
       const selected = templates.find(t => t._id === templateId);
       setWorkoutName(selected.name);
-      setExercises(selected.exercises.map(ex => ({ name: ex.name, sets: ex.sets || ex.series || '3', reps: ex.reps || '10', weight: '' })));
+      setExercises(selected.exercises.map(ex => (createExercise(ex.name, ex.sets, ex.reps))));
     } else {
       setExercises([]);
       setWorkoutName('');
@@ -96,7 +103,7 @@ export default function LogWorkout() {
   };
 
   const addExercise = (name = '') => {
-    setExercises(current => [...current, { name, sets: '3', reps: '10', weight: '' }]);
+    setExercises(current => [...current, createExercise(name)]);
     setExerciseToAdd('');
   };
 
@@ -104,16 +111,16 @@ export default function LogWorkout() {
     setExercises(current => current.filter((_, exerciseIndex) => exerciseIndex !== index));
   };
 
-  const finishSet = index => {
-    const totalSets = Number(exercises[index].sets) || 1;
-    setCompletedSets(current => ({ ...current, [index]: Math.min((current[index] || 0) + 1, totalSets) }));
-    setRestFinished(false);
-    setRestSeconds(60);
+  const updateSeries = (index, si, field, value) => setExercises(current => current.map((ex,i)=>i===index ? {...ex,series:ex.series.map((set,j)=>j===si?{...set,[field]:value}:set)} : ex));
+  const finishSet = (index, si) => {
+    updateSeries(index, si, 'completed', true);
+    setRestFinished(false); setRestSeconds(60);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!exercises.length || exercises.some(ex=>!ex.name.trim() || !ex.series.length || ex.series.some(s=>s.weight==='' || !Number.isFinite(Number(s.weight)) || Number(s.weight)<0 || !Number.isInteger(Number(s.reps)) || Number(s.reps)<1))) { setError('Completá peso y repeticiones en cada serie. Usá 0 para peso corporal sin carga.'); return; }
     setIsSaving(true);
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -123,12 +130,12 @@ export default function LogWorkout() {
         '/api/workouts',
         { 
           name: workoutName || 'Entrenamiento libre',
+          muscleGroup,
           duration: Math.max(1, Math.round((Date.now() - sessionStartedAt) / 60000)),
           exercises: exercises.map(exercise => ({
-            ...exercise,
-            sets: Number(exercise.sets),
-            reps: Number(exercise.reps),
-            weight: Number(exercise.weight || 0),
+            name: exercise.name, equipment: exercise.equipment, unilateral: exercise.unilateral,
+            sets: exercise.series.length, reps: Number(exercise.series[0].reps), weight: Number(exercise.series[0].weight),
+            series: exercise.series.map(s=>({...s,weight:Number(s.weight),reps:Number(s.reps),rir:s.rir===''?undefined:Number(s.rir)}))
           }))
         },
         { headers: { Authorization: `Bearer ${userInfo.token}` } }
@@ -199,32 +206,30 @@ export default function LogWorkout() {
 
         {isLoading && <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">Cargando rutinas…</p>}
         
-        {exercises.map((exercise, index) => (
-          <div key={index} className="relative grid grid-cols-3 gap-3 rounded-2xl border border-slate-200 p-4 sm:grid-cols-6">
-            <button type="button" onClick={() => removeExercise(index)} aria-label={`Quitar ${exercise.name || 'ejercicio'}`} className="absolute right-3 top-3 text-xl text-slate-400 hover:text-red-600">×</button>
-            <div className="col-span-3 pr-8 sm:col-span-6">
-              <label className="block text-xs font-medium text-gray-600">Ejercicio</label>
-              <input type="text" name="name" value={exercise.name} onChange={e => handleExerciseChange(index, e)} className="w-full mt-1 p-2 border rounded-md" placeholder="Nombre del ejercicio" required />
-            </div>
-            <div className="col-span-1 sm:col-span-2">
-              <label className="block text-xs font-medium text-gray-600">Series</label>
-              <input type="number" name="sets" value={exercise.sets} onChange={e => handleExerciseChange(index, e)} className="w-full mt-1 p-2 border rounded-md" placeholder="Ej: 4" required />
-            </div>
-            <div className="col-span-1 sm:col-span-2">
-              <label className="block text-xs font-medium text-gray-600">Reps</label>
-              <input type="number" name="reps" value={exercise.reps} onChange={e => handleExerciseChange(index, e)} className="w-full mt-1 p-2 border rounded-md" placeholder="Ej: 12" required />
-            </div>
-            <div className="col-span-1 sm:col-span-2">
-              <label className="block text-xs font-medium text-gray-600">Peso (kg)</label>
-              <input type="number" name="weight" value={exercise.weight} onChange={e => handleExerciseChange(index, e)} className="w-full mt-1 p-2 border rounded-md" placeholder="0" min="0" step="0.5" />
-            </div>
-            <div className="col-span-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-3 dark:border-slate-700 sm:col-span-6">
-              <span className="text-sm font-semibold text-slate-500">{completedSets[index] || 0} de {exercise.sets || 0} series completadas</span>
-              <button type="button" disabled={(completedSets[index] || 0) >= Number(exercise.sets || 0)} onClick={() => finishSet(index)} className="rounded-xl bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 transition hover:bg-emerald-200 disabled:opacity-40">✓ Serie terminada · descansar 1:00</button>
-            </div>
-          </div>
-        ))}
-        
+        <label className="block">Grupo muscular<select value={muscleGroup} onChange={e=>setMuscleGroup(e.target.value)} className="ml-3 rounded border p-2">{GROUPS.map(g=><option key={g}>{g}</option>)}</select></label>
+        <button type="button" className="rounded-xl border p-3 text-sm" onClick={()=>{setExercises(structuredClone(REFERENCE));setWorkoutName('Espalda + bíceps · referencia');setMuscleGroup(GROUPS[0]);}}>Cargar sesión de referencia: 16 series (revisar antes de guardar)</button>
+        <p className="text-sm text-slate-500">Las reps unilaterales son por lado. Cada fila permite una carga diferente. La referencia no se guarda automáticamente ni tiene una fecha inventada.</p>
+        {exercises.map((exercise,index)=>{
+          const previous = history.flatMap(w=>w.exercises.map(ex=>({...ex,date:w.date}))).find(ex=>normalizeName(ex.name)===normalizeName(exercise.name) && (!ex.equipment || ex.equipment===exercise.equipment) && Boolean(ex.unilateral)===exercise.unilateral);
+          const recommendation = previous && suggest(exercise,previous);
+          return <section key={index} className="space-y-3 rounded-2xl border border-slate-200 p-4">
+            <div className="flex gap-3"><input aria-label="Nombre del ejercicio" name="name" value={exercise.name} onChange={e=>handleExerciseChange(index,e)} required className="min-w-0 flex-1 rounded border p-2 font-bold"/><button type="button" onClick={()=>removeExercise(index)} aria-label={'Quitar '+exercise.name}>×</button></div>
+            <select aria-label="Convención de carga" name="equipment" value={exercise.equipment} onChange={e=>handleExerciseChange(index,e)} className="w-full rounded border p-2">{Object.entries(EQUIPMENT).map(([v,label])=><option key={v} value={v}>{label}</option>)}</select>
+            <label className="flex gap-2 text-sm"><input type="checkbox" checked={exercise.unilateral} onChange={e=>setExercises(current=>current.map((ex,i)=>i===index?{...ex,unilateral:e.target.checked}:ex))}/>Unilateral · repeticiones por lado</label>
+            {previous && <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-950"><p>Última sesión ({new Date(previous.date).toLocaleDateString('es-AR')}): {seriesOf(previous).map(s=>s.weight+' × '+s.reps).join(' · ')}</p><p>{recommendation.reason}</p><button type="button" className="mt-2 underline" onClick={()=>setExercises(current=>current.map((ex,i)=>i===index?{...ex,series:recommendation.series}:ex))}>Usar sugerencia: {recommendation.series.map(s=>s.weight+' × '+s.reps).join(' · ')}</button></div>}
+            {exercise.series.map((set,si)=><div key={si} className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4"><span className="col-span-2 text-sm font-bold sm:col-span-4">Serie {si+1}{set.completed?' · completada':''}</span>
+              <label className="text-xs">Peso (kg)<input type="number" min="0" step="0.5" required value={set.weight} onChange={e=>updateSeries(index,si,'weight',e.target.value)} className="mt-1 w-full rounded border p-2"/></label>
+              <label className="text-xs">Reps {exercise.unilateral?'por lado':''}<input type="number" min="1" step="1" required value={set.reps} onChange={e=>updateSeries(index,si,'reps',e.target.value)} className="mt-1 w-full rounded border p-2"/></label>
+              <label className="text-xs">Sensación<select value={set.effort} onChange={e=>updateSeries(index,si,'effort',e.target.value)} className="mt-1 w-full rounded border p-2"><option value="">Sin registrar</option><option value="easy">Fácil</option><option value="hard">Últimas difíciles</option><option value="limit">Al límite</option></select></label>
+              <label className="text-xs">RIR (reps restantes)<input type="number" min="0" max="10" step="1" value={set.rir} onChange={e=>updateSeries(index,si,'rir',e.target.value)} className="mt-1 w-full rounded border p-2"/></label></div>
+              <input aria-label={'Notas serie '+(si+1)} placeholder="Sensaciones o notas" value={set.notes} onChange={e=>updateSeries(index,si,'notes',e.target.value)} className="mt-2 w-full rounded border p-2 text-sm"/>
+              <div className="mt-2 flex justify-between gap-2"><button type="button" disabled={set.completed || set.weight==='' || Number(set.reps)<1} onClick={()=>finishSet(index,si)} className="text-sm font-bold text-emerald-600 disabled:opacity-40">✓ Terminar · descansar 1:00</button><button type="button" disabled={exercise.series.length===1} onClick={()=>setExercises(current=>current.map((ex,i)=>i===index?{...ex,series:ex.series.filter((_,j)=>j!==si)}:ex))} className="text-sm">Quitar serie</button></div>
+            </div>)}
+            <button type="button" onClick={()=>setExercises(current=>current.map((ex,i)=>i===index?{...ex,series:[...ex.series,{...ex.series.at(-1),effort:'',rir:'',notes:'',completed:false}]}:ex))} className="text-sm font-bold">+ Agregar serie</button>
+          </section>;
+        })}
+
         {exercises.length > 0 && (
           <div className="flex justify-end">
             <button

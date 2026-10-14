@@ -18,15 +18,21 @@ router.get('/', protect, async (req, res) => {
 router.post('/', protect, async (req, res) => {
   try {
     // Ahora también recibimos 'duration' desde el body
-    const { name, duration, exercises } = req.body;
+    const { name, duration, exercises, muscleGroup } = req.body;
 
-    if (!name || !duration || !exercises) {
+    if (!name?.trim() || !Number.isFinite(duration) || duration<=0 || !Array.isArray(exercises) || !exercises.length) {
       return res.status(400).json({ message: 'Faltan datos en el formulario.' });
     }
 
+    for (const ex of exercises) {
+      if (!ex.name?.trim() || (ex.series !== undefined && (!Array.isArray(ex.series) || !ex.series.length || ex.series.length>100 || ex.series.some(s=>typeof s.weight!=='number' || !Number.isFinite(s.weight) || s.weight<0 || !Number.isInteger(s.reps) || s.reps<1 || (s.rir!=null && (!Number.isInteger(s.rir) || s.rir<0 || s.rir>10)))))) return res.status(400).json({message:'Revisá peso, repeticiones y RIR de cada serie.'});
+      if (ex.series?.length) { ex.sets=ex.series.length; ex.reps=ex.series[0].reps; ex.weight=ex.series[0].weight; }
+      if (!Number.isInteger(ex.sets) || ex.sets<1 || !Number.isInteger(ex.reps) || ex.reps<1 || !Number.isFinite(ex.weight) || ex.weight<0) return res.status(400).json({message:'Datos de ejercicio inválidos.'});
+    }
     const newWorkout = new WorkoutLog({
       user: req.user.id,
       name,
+      muscleGroup,
       duration, // <-- Guardamos la duración
       exercises,
     });
@@ -49,8 +55,9 @@ router.get('/progress/:exerciseName', protect, async (req, res) => {
         .filter(ex => ex.name === exerciseName)
         .map(ex => ({
           date: workout.date,
-          weight: ex.weight,
-          reps: ex.reps,
+          weight: ex.series?.length ? Math.max(...ex.series.map(s=>s.weight)) : ex.weight,
+          reps: ex.series?.length ? ex.series.reduce((best,s)=>s.weight>best.weight?s:best,ex.series[0]).reps : ex.reps,
+          series:ex.series, equipment:ex.equipment, unilateral:ex.unilateral,
           sets: ex.sets,
         }))
     );

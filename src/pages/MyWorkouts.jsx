@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { seriesOf, EQUIPMENT } from '../workoutData';
 import { useAuth } from '../context/AuthContext';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ExerciseProgress3D from '../components/ExerciseProgress3D';
@@ -47,7 +48,7 @@ export default function MyWorkouts() {
     if (selectedExercise && token) {
       const fetchExerciseProgress = async () => {
         try {
-          const response = await axios.get(`/api/workouts/progress/${selectedExercise}`, {
+          const response = await axios.get(`/api/workouts/progress/${encodeURIComponent(selectedExercise)}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setExerciseProgress(response.data);
@@ -131,6 +132,7 @@ export default function MyWorkouts() {
         </select>
         </div>
         <ExerciseProgress3D data={exerciseProgress} />
+        {exerciseProgress.map((entry,i)=><p key={i} className="mt-3 text-sm">{new Date(entry.date).toLocaleDateString('es-AR')}: {seriesOf(entry).map(s=>s.weight+' kg × '+s.reps).join(' · ')}{entry.unilateral?' · por lado':''}{entry.equipment?' · '+EQUIPMENT[entry.equipment]:''}</p>)}
       </div>
 
       {/* Secciones de Registro e Historial */}
@@ -179,7 +181,7 @@ export default function MyWorkouts() {
                   <p className="font-bold">{workout.name} - <span className="font-normal text-gray-600">{new Date(workout.date).toLocaleDateString()}</span> - <span className="font-normal text-gray-600">{workout.duration} min</span></p>
                   <ul className="list-disc ml-6 mt-2 text-sm">
                     {workout.exercises.map((ex, i) => (
-                      <li key={i}>{ex.name}: {ex.sets}x{ex.reps} con {ex.weight}kg</li>
+                      <li key={i}>{ex.name}: {seriesOf(ex).map(s=>`${s.weight} kg × ${s.reps}${s.effort ? ' ('+({easy:'fácil',hard:'últimas difíciles',limit:'al límite'}[s.effort])+')' : ''}${s.rir!=null ? ' · RIR '+s.rir : ''}${s.notes ? ' · '+s.notes : ''}`).join(' / ')}{ex.unilateral ? ' · por lado' : ''}{ex.equipment ? ' · '+EQUIPMENT[ex.equipment] : ''}</li>
                     ))}
                   </ul>
                 </li>
