@@ -56,8 +56,9 @@ export default function Home() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <section className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-400 to-cyan-400 p-7 text-slate-950 sm:p-10">
-        <p className="text-sm font-black uppercase tracking-[0.2em]">Tu gimnasio</p>
-        <h1 className="mt-3 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">Entrená con intención. Medí cada avance.</h1>
+        <p className="text-sm font-black uppercase tracking-[0.2em]">Orbital</p>
+        <h1 className="mt-3 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">Tu universo de entrenamientos.</h1>
+        <p className="mt-4 max-w-xl text-slate-900/80">Tu semana, tus series y cada avance, en un mismo lugar.</p>
         <div className="mt-7 flex flex-wrap gap-3">
           <Link to="/log-workout" className="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white">Empezar entrenamiento</Link>
           <Link to="/my-workouts" className="rounded-xl bg-white/60 px-5 py-3 font-bold">Ver mi progreso</Link>

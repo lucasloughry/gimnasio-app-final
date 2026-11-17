@@ -39,7 +39,7 @@ export default function Login() {
     <div className="min-h-[calc(100vh-72px)] bg-slate-950 px-4 py-12 flex items-center justify-center">
       <div className="w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl">
         <div className="bg-gradient-to-br from-emerald-400 to-teal-600 px-8 py-10 text-slate-950">
-          <p className="text-sm font-bold uppercase tracking-[0.22em]">Gimnasio Municipal</p>
+          <p className="text-sm font-bold uppercase tracking-[0.22em]">Orbital</p>
           <h1 className="mt-3 text-4xl font-black tracking-tight">Volvé a entrenar.</h1>
           <p className="mt-2 text-sm font-medium text-slate-900/70">Tu progreso te está esperando.</p>
         </div>

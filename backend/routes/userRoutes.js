@@ -81,7 +81,7 @@ router.post('/forgot-password', async (req, res) => {
     await resend.emails.send({
       from: 'onboarding@resend.dev',
       to: user.email,
-      subject: 'Reseteo de Contraseña - Gimnasio Municipal',
+      subject: 'Restablecé tu contraseña - Orbital',
       text: message,
     });
     res.json({ message: 'Email de reseteo enviado.' });

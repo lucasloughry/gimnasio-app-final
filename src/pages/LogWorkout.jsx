@@ -197,9 +197,9 @@ export default function LogWorkout() {
           <button type="button" disabled={activeSet} onClick={() => addExercise()} className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200">+ Crear nuevo</button>
         </div>
 
-        <div className="space-y-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/60">
+        <div className="min-w-0 space-y-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/60">
           <div className="grid gap-2 sm:grid-cols-2"><label className="text-sm">Filtrar por grupo<select aria-label="Filtrar ejercicios por grupo" value={catalogGroup} onChange={e=>setCatalogGroup(e.target.value)} className="mt-1 w-full rounded-xl border p-3"><option value="">Todos los grupos</option>{MUSCLE_GROUPS.map(g=><option key={g}>{g}</option>)}</select></label><label className="text-sm">Buscar ejercicio<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Nombre del ejercicio" className="mt-1 w-full rounded-xl border p-3"/></label></div>
-          <select value={exerciseToAdd} onChange={event => setExerciseToAdd(event.target.value)} className="min-w-0 flex-1 rounded-xl border border-slate-300 p-3 dark:border-slate-700">
+          <select aria-label="Elegir ejercicio" value={exerciseToAdd} onChange={event => setExerciseToAdd(event.target.value)} className="block w-full min-w-0 max-w-full rounded-xl border border-slate-300 p-3 dark:border-slate-700">
             <option value="">Elegí un ejercicio existente…</option>
             {MUSCLE_GROUPS.map(group=><optgroup key={group} label={group}>{visibleCatalog.filter(name=>CATALOG.find(ex=>normalizeName(ex.name)===normalizeName(name))?.group===group).map(name=><option key={name} value={name}>{name}</option>)}</optgroup>)}
             <optgroup label="Otros ejercicios del gimnasio">{visibleCatalog.filter(name=>!CATALOG.some(ex=>normalizeName(ex.name)===normalizeName(name))).map(name=><option key={name} value={name}>{name}</option>)}</optgroup>

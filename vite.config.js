@@ -17,12 +17,13 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       // Archivos a cachear para que la app funcione sin conexión
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['orbital-icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Gimnasio Municipal',
-        short_name: 'GymApp',
-        description: 'Aplicación de seguimiento para el Gimnasio Municipal.',
-        theme_color: '#ffffff',
+        name: 'Orbital',
+        short_name: 'Orbital',
+        description: 'Tu universo de entrenamientos.',
+        theme_color: '#020617',
+        background_color: '#020617',
         // Íconos de la aplicación que crearemos en el siguiente paso
         icons: [
           {

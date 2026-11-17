@@ -37,7 +37,7 @@ export default function App() {
   return (
     <div>
       <nav className="sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-4 py-3 text-white shadow-lg backdrop-blur sm:px-6">
-        <Link to="/" className="flex items-center gap-3 font-black tracking-tight" onClick={() => setIsMenuOpen(false)}><span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-400 text-slate-950">G</span><span>Gimnasio <span className="text-emerald-400">Municipal</span></span></Link>
+        <Link to="/" className="flex items-center gap-3 font-black tracking-tight" onClick={() => setIsMenuOpen(false)}><img src="/orbital-icon.svg" alt="" className="h-10 w-10 rounded-xl"/><span>Orbital</span></Link>
         
         {/* --- Menú para pantallas grandes (Desktop) --- */}
         <div className="hidden md:flex space-x-4 items-center">
