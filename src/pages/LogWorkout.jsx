@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useRef } from 'react';
 import { MUSCLE_GROUPS, recommendExercises, transitionSeries } from '../training';
 import ExerciseDemo from '../components/ExerciseDemo';
-import { CATALOG, GROUPS, EQUIPMENT, ROUTINES, REFERENCE, createExercise, seriesOf, suggest, normalizeName } from '../workoutData';
+import { CATALOG, EQUIPMENT, ROUTINES, createExercise, seriesOf, suggest, normalizeName } from '../workoutData';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // <-- 1. Importar useAuth
 
@@ -11,7 +11,6 @@ export default function LogWorkout() {
   const [templates, setTemplates] = useState(ROUTINES);
   const [history, setHistory] = useState([]);
   const [historyLoaded,setHistoryLoaded] = useState(false);
-  const [muscleGroup, setMuscleGroup] = useState(GROUPS[0]);
   const [exerciseCatalog, setExerciseCatalog] = useState(CATALOG.map(ex=>ex.name));
   const [exerciseMedia, setExerciseMedia] = useState({});
   const [exerciseToAdd, setExerciseToAdd] = useState('');
@@ -57,7 +56,7 @@ export default function LogWorkout() {
         setExerciseCatalog([...new Set(names)].sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.error("Error al obtener las plantillas:", error);
-        setError('No pudimos cargar tus rutinas. Revisá tu conexión e intentá nuevamente.');
+        setError('No pudimos cargar el catálogo del gimnasio. Revisá tu conexión e intentá nuevamente.');
       } finally {
         setIsLoading(false);
       }
@@ -80,7 +79,7 @@ export default function LogWorkout() {
     if (GROUPS.includes(selected.category)) setMuscleGroup(selected.category);
     setMuscleGroups([...new Set(selected.exercises.map(ex=>CATALOG.find(meta=>normalizeName(meta.name)===normalizeName(ex.name))?.group).filter(Boolean))]);
     setExercises(selected.exercises.map(exercise => (createExercise(exercise.name, exercise.sets, exercise.reps))));
-  }, [searchParams, templates, selectedTemplateId]);
+  }, [searchParams, templates, selectedTemplateId, history]);
 
   useEffect(()=>{
     if (groupsInitialized.current || !searchParams.get('exercise')) return;
@@ -108,25 +107,6 @@ export default function LogWorkout() {
     const timer=window.setTimeout(()=>setRestFinished(false),7000);
     return ()=>window.clearTimeout(timer);
   },[restFinished]);
-  const handleTemplateChange = (e) => {
-    const templateId = e.target.value;
-    setSelectedTemplateId(templateId);
-    if (activeSet) return;
-    setMuscleGroups([]);
-    setRestUntil(0);
-    setRestSeconds(0);
-    if (templateId) {
-      const selected = templates.find(t => t._id === templateId);
-      setWorkoutName(selected.name);
-      if(GROUPS.includes(selected.category)) setMuscleGroup(selected.category);
-      setMuscleGroups([...new Set(selected.exercises.map(ex=>CATALOG.find(meta=>normalizeName(meta.name)===normalizeName(ex.name))?.group).filter(Boolean))]);
-      setExercises(selected.exercises.map(ex => (createExercise(ex.name, ex.sets, ex.reps))));
-    } else {
-      setExercises([]);
-      setWorkoutName('');
-    }
-  };
-
   const handleExerciseChange = (index, event) => {
     const values = [...exercises];
     values[index][event.target.name] = event.target.value;
@@ -170,7 +150,6 @@ export default function LogWorkout() {
         '/api/workouts',
         { 
           name: workoutName || 'Entrenamiento libre',
-          muscleGroup: muscleGroups.length ? undefined : muscleGroup,
           muscleGroups,
           duration: Math.max(1, Math.round((Date.now() - sessionStartedAt) / 60000)),
           exercises: logged.map(exercise => ({
@@ -203,30 +182,12 @@ export default function LogWorkout() {
       <div className="mb-8">
         <p className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-600">Sesión de hoy</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Registrar entrenamiento</h1>
-        <p className="mt-2 text-slate-500">Elegí una rutina o armá una sesión libre en el momento.</p>
+        <p className="mt-2 text-slate-500">Elegí los grupos musculares y armá tu secuencia de ejercicios.</p>
       </div>
       <form onSubmit={handleSubmit} noValidate className="space-y-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-8">
         {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{error}</div>}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="template-select" className="block text-sm font-medium text-gray-700">Elige una Rutina</label>
-            <select
-              id="template-select"
-              value={selectedTemplateId}
-              onChange={handleTemplateChange} disabled={activeSet}
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md"
-            >
-              <option value="">Entrenamiento libre</option>
-              {templates.map(template => (
-                <option key={template._id} value={template._id}>{template.name} ({template.category})</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="workout-name" className="block text-sm font-medium text-gray-700">Nombre de la sesión</label>
-            <input id="workout-name" value={workoutName} onChange={(e) => setWorkoutName(e.target.value)} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md" placeholder="Ej: Tren superior" required />
-          </div>
-        </div>
+        <fieldset className="space-y-3" disabled={activeSet}><legend className="font-bold">Grupos de esta sesión</legend><div className="flex flex-wrap gap-2">{MUSCLE_GROUPS.map(g=><button type="button" key={g} aria-pressed={muscleGroups.includes(g)} onClick={()=>setMuscleGroups(current=>current.includes(g)?current.filter(v=>v!==g):[...current,g])} className={`rounded-xl border px-3 py-2 text-sm ${muscleGroups.includes(g)?'bg-emerald-400 text-slate-950':'border-slate-300'}`}>{g}</button>)}</div><button type="button" disabled={!muscleGroups.length} className="rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-40" onClick={()=>{setExercises(recommendExercises(muscleGroups,history));setWorkoutName(muscleGroups.join(' + '));setSelectedTemplateId('');}}>Armar secuencia recomendada</button><p className="text-xs text-slate-500">Reemplaza los ejercicios de esta sesión. Los movimientos principales aparecen antes que los aislados; podés cambiar el orden.</p></fieldset>
+        <div><label htmlFor="workout-name" className="block text-sm font-medium text-gray-700">Nombre de la sesión</label><input id="workout-name" value={workoutName} onChange={e=>setWorkoutName(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 p-3" placeholder="Ej: Espalda + Bíceps"/></div>
 
         <div className="flex items-center justify-between border-t pt-5">
           <div>
@@ -246,10 +207,9 @@ export default function LogWorkout() {
           <button type="button" disabled={!exerciseToAdd || activeSet} onClick={() => addExercise(exerciseToAdd)} className="rounded-xl bg-emerald-400 px-5 py-3 font-bold text-slate-950 disabled:opacity-40">Agregar ejercicio</button>
         </div>
 
-        {isLoading && <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">Cargando rutinas…</p>}
+        {isLoading && <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">Cargando ejercicios…</p>}
         
-        <fieldset className="space-y-3" disabled={activeSet}><legend className="font-bold">Grupos de esta sesión</legend><div className="flex flex-wrap gap-2">{MUSCLE_GROUPS.map(g=><button type="button" key={g} aria-pressed={muscleGroups.includes(g)} onClick={()=>setMuscleGroups(current=>current.includes(g)?current.filter(v=>v!==g):[...current,g])} className={`rounded-xl border px-3 py-2 text-sm ${muscleGroups.includes(g)?'bg-emerald-400 text-slate-950':'border-slate-300'}`}>{g}</button>)}</div><button type="button" disabled={!muscleGroups.length} className="rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-40" onClick={()=>{setExercises(recommendExercises(muscleGroups,history));setWorkoutName(muscleGroups.join(' + '));setSelectedTemplateId('');}}>Armar secuencia recomendada</button><p className="text-xs text-slate-500">Reemplaza los ejercicios de esta sesión. Los movimientos principales aparecen antes que los aislados; podés cambiar el orden.</p></fieldset>
-        <button type="button" className="rounded-xl border p-3 text-sm" disabled={activeSet} onClick={()=>{setSelectedTemplateId('');setMuscleGroups(['Espalda','Bíceps']);setExercises(structuredClone(REFERENCE));setWorkoutName('Espalda + bíceps · referencia');setMuscleGroup(GROUPS[0]);}}>Cargar sesión de referencia: 16 series (revisar antes de guardar)</button>
+
         <p className="text-sm text-slate-500">Las reps unilaterales son por lado. Cada fila permite una carga diferente. Tocá la tarjeta para iniciar y terminar cada serie. Al guardar, solo se incluyen las series terminadas.</p>
         {exercises.map((exercise,index)=>{
           const previous = history.flatMap(w=>w.exercises.map(ex=>({...ex,date:w.date}))).find(ex=>normalizeName(ex.name)===normalizeName(exercise.name) && (!ex.equipment || ex.equipment===exercise.equipment) && Boolean(ex.unilateral)===exercise.unilateral);
