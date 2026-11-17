@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import ExerciseLibrary from '../components/ExerciseLibrary';
+import InstallOrbital from '../components/InstallOrbital';
 import TodayWorkout from '../components/TodayWorkout';
 import { useAuth } from '../context/AuthContext';
 
@@ -55,6 +56,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <InstallOrbital/>
       <section className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-400 to-cyan-400 p-7 text-slate-950 sm:p-10">
         <p className="text-sm font-black uppercase tracking-[0.2em]">Orbital</p>
         <h1 className="mt-3 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">Tu universo de entrenamientos.</h1>

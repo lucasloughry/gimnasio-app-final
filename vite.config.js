@@ -17,8 +17,13 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       // Archivos a cachear para que la app funcione sin conexión
-      includeAssets: ['orbital-icon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['orbital-white-192.png', 'orbital-favicon-white.png', 'orbital-apple-touch.png'],
       manifest: {
+        id: '/',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        lang: 'es-AR',
         name: 'Orbital',
         short_name: 'Orbital',
         description: 'Tu universo de entrenamientos.',
@@ -27,14 +32,20 @@ export default defineConfig({
         // Íconos de la aplicación que crearemos en el siguiente paso
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'orbital-white-192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'orbital-white-512.png',
             sizes: '512x512',
             type: 'image/png'
+          },
+          {
+            src: 'orbital-maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       }
