@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { MUSCLE_GROUPS } from '../../shared/trainingPlan.js';
 
 const userSchema = mongoose.Schema(
   {
@@ -35,7 +36,8 @@ const userSchema = mongoose.Schema(
       {
         _id: false,
         day: { type: Number, min: 0, max: 6, required: true },
-        template: { type: mongoose.Schema.Types.ObjectId, ref: 'WorkoutTemplate', required: true },
+        template: { type: mongoose.Schema.Types.ObjectId, ref: 'WorkoutTemplate' },
+        groups: [{ type: String, enum: MUSCLE_GROUPS }],
       },
     ],
   

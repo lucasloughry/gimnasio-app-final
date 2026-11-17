@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
+import { MUSCLE_GROUPS } from '../../shared/trainingPlan.js';
 
 const setSchema = new mongoose.Schema({
   weight: {type:Number,required:true,min:0}, reps:{type:Number,required:true,min:1,validate:Number.isInteger},
   effort:{type:String,enum:['','easy','hard','limit'],default:''}, rir:{type:Number,min:0,max:10,validate:Number.isInteger},
-  notes:{type:String,maxlength:1000}, completed:{type:Boolean,default:false}
+  notes:{type:String,maxlength:1000}, completed:{type:Boolean,default:false},
+  startedAt:Date, finishedAt:Date
 }, {_id:false});
 const exerciseLogSchema = new mongoose.Schema({
   series: {type:[setSchema],default:undefined},
@@ -43,6 +45,7 @@ const workoutLogSchema = new mongoose.Schema(
       required: true,
     },
     muscleGroup:{type:String,enum:['Espalda + bíceps','Pecho + tríceps','Piernas + hombros','Full body']},
+    muscleGroups:[{type:String,enum:MUSCLE_GROUPS}],
     // --- CAMPO NUEVO ---
     duration: {
       type: Number, // Guardaremos la duración en minutos

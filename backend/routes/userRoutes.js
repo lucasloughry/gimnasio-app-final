@@ -8,6 +8,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import User from '../models/userModel.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { validatePlan } from '../../shared/trainingPlan.js';
+import WorkoutTemplate from '../models/workoutTemplateModel.js';
 
 const router = express.Router();
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -165,24 +167,23 @@ router.post('/google', async (req, res) => {
 });
 
 router.get('/profile/training-plan', protect, async (req, res) => {
-  const user = await User.findById(req.user.id).select('trainingPlan').lean();
-  res.json(user?.trainingPlan || []);
+  try {
+    const user = await User.findById(req.user.id).select('trainingPlan').lean();
+    if (!user) return res.status(404).json({message:'Usuario no encontrado.'});
+    res.json(user.trainingPlan || []);
+  } catch { res.status(500).json({message:'No pudimos cargar el plan semanal.'}); }
 });
 
 router.put('/profile/training-plan', protect, async (req, res) => {
   try {
-    const plan = Array.isArray(req.body.plan) ? req.body.plan : [];
-    const validPlan = plan
-      .filter(item => Number.isInteger(Number(item.day)) && item.template)
-      .map(item => ({ day: Number(item.day), template: item.template }));
-    const uniqueDays = new Set(validPlan.map(item => item.day));
-    if (uniqueDays.size !== validPlan.length || validPlan.some(item => item.day < 0 || item.day > 6)) {
-      return res.status(400).json({ message: 'El plan semanal contiene días inválidos o repetidos.' });
-    }
+    const validPlan = validatePlan(req.body.plan);
+    const templateIds = [...new Set(validPlan.filter(item=>item.template).map(item=>item.template))];
+    if (templateIds.length && await WorkoutTemplate.countDocuments({_id:{$in:templateIds}}) !== templateIds.length) return res.status(400).json({message:'Una de las rutinas ya no existe. Elegí otra o seleccioná grupos musculares.'});
     const user = await User.findByIdAndUpdate(req.user.id, { trainingPlan: validPlan }, { new: true, runValidators: true }).select('trainingPlan');
+    if (!user) return res.status(404).json({message:'Usuario no encontrado.'});
     res.json(user.trainingPlan);
   } catch (error) {
-    res.status(400).json({ message: 'No pudimos guardar el plan semanal.' });
+    res.status(400).json({ message: error.message || 'No pudimos guardar el plan semanal.' });
   }
 });
 

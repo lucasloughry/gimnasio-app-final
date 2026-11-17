@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import ExerciseLibrary from '../components/ExerciseLibrary';
 import TodayWorkout from '../components/TodayWorkout';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,13 +15,20 @@ export default function Home() {
 
   useEffect(() => {
     const fetchMachines = async () => {
+      setIsLoading(true);
+      setTrainingPlan([]);
+      setError('');
       try {
         const requests = [
           axios.get('/api/machines'),
           axios.get('/api/templates'),
         ];
         if (user?.token) requests.push(axios.get('/api/users/profile/training-plan', { headers: { Authorization: `Bearer ${user.token}` } }));
-        const [machinesResponse, templatesResponse, planResponse] = await Promise.all(requests);
+        const [machinesResult, templatesResult, planResult] = await Promise.allSettled(requests);
+        const machinesResponse=machinesResult.status==='fulfilled'?machinesResult.value:{data:[]};
+        const templatesResponse=templatesResult.status==='fulfilled'?templatesResult.value:{data:[]};
+        const planResponse=planResult?.status==='fulfilled'?planResult.value:null;
+        if ([machinesResult,templatesResult,planResult].filter(Boolean).some(r=>r.status==='rejected')) setError('No pudimos cargar una parte de tus datos. Recargá para intentar nuevamente.');
         setMachines(machinesResponse.data);
         setTemplates(templatesResponse.data);
         if (planResponse) setTrainingPlan(planResponse.data);
@@ -56,19 +64,13 @@ export default function Home() {
         </div>
       </section>
       {user && <TodayWorkout templates={templates} plan={trainingPlan} isLoading={isLoading} onSavePlan={saveTrainingPlan} />}
+      <ExerciseLibrary/>
       <div className="mb-5 flex items-end justify-between"><div><p className="text-xs font-bold uppercase tracking-widest text-emerald-600">Equipamiento</p><h2 className="mt-1 text-2xl font-black">Máquinas disponibles</h2></div><span className="text-sm text-slate-500">{machines.length} máquinas</span></div>
       {error && <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
       {isLoading && <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{[1,2,3].map(item => <div key={item} className="h-80 animate-pulse rounded-3xl bg-slate-200" />)}</div>}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {Array.isArray(machines) && machines.map(m => (
           <article key={m._id} className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
-            {m.image && (
-              <img 
-                src={m.image} 
-                alt={m.name} 
-                className="h-52 w-full object-cover transition duration-500 group-hover:scale-105"
-              />
-            )}
             <div className="flex flex-1 flex-col p-5"><h3 className="text-xl font-black">{m.name}</h3>
             <p className="mt-2 line-clamp-2 flex-grow text-sm leading-6 text-slate-500">{m.description}</p>
             <Link

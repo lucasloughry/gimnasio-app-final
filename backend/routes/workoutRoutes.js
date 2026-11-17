@@ -18,7 +18,7 @@ router.get('/', protect, async (req, res) => {
 router.post('/', protect, async (req, res) => {
   try {
     // Ahora también recibimos 'duration' desde el body
-    const { name, duration, exercises, muscleGroup } = req.body;
+    const { name, duration, exercises, muscleGroup, muscleGroups } = req.body;
 
     if (!name?.trim() || !Number.isFinite(duration) || duration<=0 || !Array.isArray(exercises) || !exercises.length) {
       return res.status(400).json({ message: 'Faltan datos en el formulario.' });
@@ -33,6 +33,7 @@ router.post('/', protect, async (req, res) => {
       user: req.user.id,
       name,
       muscleGroup,
+      muscleGroups,
       duration, // <-- Guardamos la duración
       exercises,
     });

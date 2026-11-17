@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import ExerciseDemo from '../components/ExerciseDemo';
 
 export default function Maquina() {
   const { id } = useParams();
@@ -24,13 +25,6 @@ export default function Maquina() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      {machine.image && (
-        <img 
-          src={machine.image} // URL directa
-          alt={machine.name} 
-          className="w-full h-80 object-cover rounded-lg mb-6 shadow-lg"
-        />
-      )}
       <h1 className="text-3xl font-bold mb-4">{machine.name}</h1>
       <p className="mb-6 text-gray-700">{machine.description}</p>
       
@@ -40,11 +34,7 @@ export default function Maquina() {
         {machine.exercises && machine.exercises.length > 0 ? (
           machine.exercises.map((ej, idx) => (
             <li key={idx} className="flex items-center bg-gray-50 p-3 rounded-lg shadow-sm">
-              <img 
-                src={ej.gifUrl} // URL directa
-                alt={ej.name}
-                className="w-20 h-20 object-cover rounded-md mr-4 bg-gray-200"
-              />
+              <ExerciseDemo name={ej.name} customUrl={ej.gifUrl}/>
               <span className="font-medium text-lg">{ej.name}</span>
             </li>
           ))
